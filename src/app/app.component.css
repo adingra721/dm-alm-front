@@ -1,0 +1,272 @@
+.shell {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 286px minmax(0, 1fr);
+  transition: grid-template-columns .28s ease;
+}
+
+.shell.sidebar-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.shell > app-sidebar {
+  display: block;
+  min-width: 0;
+  max-height: 100vh;
+  overflow: hidden;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity .22s ease, transform .28s ease, max-height .28s ease;
+}
+
+.shell.sidebar-collapsed > app-sidebar {
+  max-height: 100vh;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-18px);
+}
+
+.main {
+  min-width: 0;
+}
+
+.shell.sidebar-collapsed .main {
+  width: 100%;
+  margin: 0;
+}
+
+.app-header {
+  border-bottom: 1px solid #dde3ee;
+  background: #ffffff;
+}
+
+.topbar {
+  display: flex;
+  min-height: 86px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 32px;
+}
+
+.topbar-title,
+.topbar-actions {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-title {
+  gap: 24px;
+  min-width: 0;
+}
+
+.topbar-title h1 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.menu-button,
+.topbar-actions button {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #667085;
+  font-size: 21px;
+}
+
+.menu-button:hover,
+.topbar-actions button:hover {
+  color: #1f2937;
+}
+
+.topbar-actions {
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.action-separator {
+  width: 1px;
+  height: 42px;
+  background: #dde3ee;
+}
+
+.user-avatar {
+  position: relative;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 2px solid #f1f5f9;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #d8e8ff, #ffffff);
+  color: #16458f;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.user-avatar i {
+  position: absolute;
+  right: 1px;
+  bottom: 2px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #12b76a;
+}
+
+.header-breadcrumb {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid #eef2f7;
+  padding: 0 32px;
+  color: #667085;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.header-breadcrumb a {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+.header-breadcrumb strong {
+  color: #1f2937;
+  font-weight: 800;
+}
+
+.content {
+  min-width: 0;
+  padding: 28px 38px 38px;
+}
+
+@media (min-width: 1600px) {
+  .shell {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
+
+  .shell.sidebar-collapsed {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+
+  .main {
+    width: min(100%, 1480px);
+    margin: 0 auto;
+  }
+
+  .content {
+    padding: 36px 48px 48px;
+  }
+}
+
+@media (min-width: 2200px) {
+  .shell {
+    grid-template-columns: 360px minmax(0, 1fr);
+  }
+
+  .shell.sidebar-collapsed {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+
+  .main {
+    width: min(100%, 1760px);
+  }
+
+  .content {
+    padding: 48px 64px 64px;
+  }
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .shell.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .shell > app-sidebar {
+    max-height: 420px;
+  }
+
+  .shell.sidebar-collapsed > app-sidebar {
+    max-height: 0;
+  }
+
+  .topbar {
+    min-height: 74px;
+    padding: 0 18px;
+  }
+
+  .topbar-title {
+    gap: 14px;
+  }
+
+  .header-breadcrumb {
+    min-height: 54px;
+    padding: 0 18px;
+    font-size: 16px;
+  }
+
+  .content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 12px;
+  }
+
+  .topbar-title {
+    width: 100%;
+  }
+
+  .topbar-title h1 {
+    font-size: 20px;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .topbar-actions button {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  .action-separator {
+    height: 30px;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-breadcrumb {
+    min-height: auto;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .content {
+    padding: 12px;
+  }
+}

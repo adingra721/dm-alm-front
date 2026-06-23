@@ -1,0 +1,37 @@
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <div class="brand">
+    <img class="brand-logo" src="/images/cima-alm-logo.png" alt="CIMA ALM">
+    <div class="brand-text">
+      <strong>CIMA ALM</strong>
+      <small>SALA ALLIANZ</small>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <details class="settings-menu" open>
+      <summary>
+        <i class="fa fa-cog menu-icon" aria-hidden="true"></i>
+        <span>Administration</span>
+      </summary>
+
+      <section *ngFor="let group of groups | keyvalue; let first = first">
+        <details
+          class="nav-group"
+          routerLinkActive="group-active"
+          #groupActive="routerLinkActive"
+          [open]="first || groupActive.isActive"
+        >
+          <summary>{{ group.key }}</summary>
+          <a
+            *ngFor="let item of group.value"
+            [routerLink]="['/parametrage', item.key]"
+            routerLinkActive="active"
+            [attr.title]="collapsed ? item.title : null"
+          >
+            {{ item.title }}
+          </a>
+        </details>
+      </section>
+    </details>
+  </nav>
+</aside>

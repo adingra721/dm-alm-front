@@ -1,0 +1,170 @@
+<section class="page" *ngIf="config">
+  <div class="notice error" *ngIf="error">{{ error }}</div>
+  <div class="notice success" *ngIf="success">{{ success }}</div>
+
+  <section class="toolbar">
+    <div class="toolbar-left">
+      <select>
+        <option>Choisir une action</option>
+      </select>
+      <button type="button" class="icon-button" aria-label="Appliquer l'action">›</button>
+    </div>
+    <div class="toolbar-right">
+      <span class="search-label">Recherche par colonne</span>
+    </div>
+  </section>
+
+  <section class="editor" *ngIf="showForm">
+    <h2>{{ formMode === 'view' ? 'Voir' : (selected ? 'Modifier' : 'Creer') }}</h2>
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-grid">
+        <label *ngFor="let field of config.fields" [class.checkbox]="field.type === 'checkbox'">
+          <span>{{ field.label }}</span>
+          <ng-container [ngSwitch]="field.type">
+            <textarea *ngSwitchCase="'textarea'" [formControlName]="field.key" rows="3"></textarea>
+            <select *ngSwitchCase="'select'" [formControlName]="field.key">
+              <option [ngValue]="null">-- Selectionner --</option>
+              <option *ngFor="let option of options[field.optionEntityKey || '']" [value]="option['id']">
+                {{ optionLabel(field, option) }}
+              </option>
+            </select>
+            <input *ngSwitchCase="'checkbox'" type="checkbox" [formControlName]="field.key">
+            <input *ngSwitchCase="'email'" type="email" [formControlName]="field.key">
+            <input *ngSwitchCase="'text'" type="text" [formControlName]="field.key">
+          </ng-container>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary" *ngIf="formMode !== 'view'" [disabled]="saving">{{ saving ? 'Enregistrement...' : 'Enregistrer' }}</button>
+        <button type="button" class="secondary" (click)="cancel()">{{ formMode === 'view' ? 'Fermer' : 'Annuler' }}</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="table-area">
+    <div class="table-header">
+      <button type="button" class="primary compact" (click)="create()">
+        <span class="button-icon" aria-hidden="true">+</span>
+        <span>Creer</span>
+      </button>
+      <div class="table-meta">
+        <span *ngIf="selectedCount">{{ selectedCount }} selectionne(s)</span>
+        <button type="button" class="secondary compact" (click)="loadData()">
+          <span class="button-icon" aria-hidden="true">↻</span>
+          <span>Actualiser</span>
+        </button>
+        <details class="column-chooser">
+          <summary aria-label="Colonnes">
+            <i class="fa fa-columns button-icon" aria-hidden="true"></i>
+          </summary>
+          <div class="column-menu">
+            <label *ngFor="let column of columns">
+              <input
+                type="checkbox"
+                [checked]="isColumnVisible(column)"
+                (change)="toggleColumn(column, $event)"
+              >
+              <span>{{ column }}</span>
+            </label>
+            <button type="button" class="secondary compact" (click)="showAllColumns()">Tout afficher</button>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="loading" *ngIf="loading">Chargement...</div>
+    <div class="empty" *ngIf="!loading && rows.length === 0">Aucune donnee disponible.</div>
+    <div class="empty" *ngIf="!loading && rows.length > 0 && filteredRows.length === 0">Aucun resultat pour ces criteres.</div>
+
+    <div class="table-wrap" *ngIf="!loading && rows.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th class="check-col">
+              <input
+                type="checkbox"
+                class="row-check"
+                [checked]="allPagedRowsSelected"
+                [indeterminate]="somePagedRowsSelected"
+                (change)="togglePagedRowsSelection($event)"
+                aria-label="Selectionner la page"
+              >
+            </th>
+            <th *ngFor="let column of visibleColumns">{{ column }}</th>
+            <th class="action-col">Actions</th>
+          </tr>
+          <tr class="filter-row">
+            <th></th>
+            <th *ngFor="let column of visibleColumns">
+              <input
+                type="search"
+                [value]="columnFilters[column] || ''"
+                (input)="setColumnFilter(column, $event)"
+                [attr.placeholder]="'Rechercher ' + column"
+              >
+            </th>
+            <th class="filter-actions">
+              <button type="button" class="secondary compact" *ngIf="rows.length" (click)="clearFilters()">
+                <i class="fa fa-eraser button-icon" aria-hidden="true"></i>
+                <span>Vider les filtres</span>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of pagedRows">
+            <td class="check-col">
+              <input
+                type="checkbox"
+                class="row-check"
+                [checked]="isRowSelected(row)"
+                (change)="toggleRowSelection(row, $event)"
+                aria-label="Selectionner la ligne"
+              >
+            </td>
+            <td *ngFor="let column of visibleColumns">{{ displayValue(row, column) }}</td>
+            <td class="row-actions">
+              <button type="button" class="view" (click)="view(row)">
+                <i class="fa fa-eye button-icon" aria-hidden="true"></i>
+                <span>Voir</span>
+              </button>
+              <button type="button" class="link" (click)="edit(row)">
+                <span class="button-icon" aria-hidden="true">✎</span>
+                <span>Modifier</span>
+              </button>
+              <button type="button" class="danger" (click)="delete(row)">
+                <i class="fa fa-trash button-icon" aria-hidden="true"></i>
+                <span>Supprimer</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" *ngIf="!loading && filteredRows.length > 0">
+      <div class="pagination-info">
+        Affichage {{ paginationStart }}-{{ paginationEnd }} sur {{ filteredRows.length }}
+      </div>
+      <div class="pagination-controls">
+        <label class="page-size">
+          <select aria-label="Nombre de lignes par page" [value]="pageSize" (change)="changePageSize($event)">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          </select>
+        </label>
+        <button type="button" class="page-button" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">‹</button>
+        <button
+          type="button"
+          class="page-button"
+          *ngFor="let page of pageNumbers"
+          [class.active]="page === currentPage"
+          (click)="changePage(page)"
+        >
+          {{ page }}
+        </button>
+        <button type="button" class="page-button" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">›</button>
+      </div>
+    </div>
+  </section>
+</section>

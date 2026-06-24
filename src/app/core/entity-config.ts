@@ -134,6 +134,186 @@ export const entityConfigs: EntityConfig[] = [
   }
 ];
 
+const acquisitionFields: FieldConfig[] = [
+  { key: 'code', label: 'Code dossier', type: 'text', required: true },
+  { key: 'libelle', label: 'Libelle', type: 'text', required: true },
+  { key: 'compagnieId', label: 'Compagnie', type: 'select', optionEntityKey: 'companies', optionLabelKey: 'raisonSociale' },
+  { key: 'filialeId', label: 'Filiale', type: 'select', optionEntityKey: 'subsidiaries' },
+  { key: 'typeActifId', label: 'Type actif', type: 'select', optionEntityKey: 'financialAssetTypes' },
+  { key: 'categorieActifId', label: 'Categorie actif', type: 'select', optionEntityKey: 'assetCategories' },
+  { key: 'deviseId', label: 'Devise', type: 'select', optionEntityKey: 'currencies' },
+  { key: 'montantNominal', label: 'Montant nominal', type: 'text' },
+  { key: 'dateSoumission', label: 'Date soumission', type: 'text' },
+  { key: 'dateAutorisation', label: 'Date autorisation', type: 'text' },
+  { key: 'dateValidation', label: 'Date validation', type: 'text' },
+  { key: 'statut', label: 'Statut', type: 'text' },
+  { key: 'gestionnaire', label: 'Gestionnaire', type: 'text' },
+  { key: 'daf', label: 'DAF', type: 'text' },
+  { key: 'dg', label: 'DG', type: 'text' },
+  { key: 'motifRejet', label: 'Motif rejet', type: 'textarea' }
+];
+
+const financialAssetFields: FieldConfig[] = [
+  { key: 'code', label: 'Code actif', type: 'text', required: true },
+  { key: 'libelle', label: 'Libelle', type: 'text', required: true },
+  { key: 'acquisitionId', label: 'Dossier acquisition', type: 'select', optionEntityKey: 'assetAcquisitions' },
+  { key: 'compagnieId', label: 'Compagnie', type: 'select', optionEntityKey: 'companies', optionLabelKey: 'raisonSociale' },
+  { key: 'filialeId', label: 'Filiale', type: 'select', optionEntityKey: 'subsidiaries' },
+  { key: 'typeActifId', label: 'Type actif', type: 'select', optionEntityKey: 'financialAssetTypes' },
+  { key: 'categorieActifId', label: 'Categorie actif', type: 'select', optionEntityKey: 'assetCategories' },
+  { key: 'paysEmetteurId', label: 'Pays emetteur', type: 'select', optionEntityKey: 'countries' },
+  { key: 'deviseId', label: 'Devise', type: 'select', optionEntityKey: 'currencies' },
+  { key: 'emetteur', label: 'Emetteur', type: 'text' },
+  { key: 'valeurNominale', label: 'Valeur nominale', type: 'text' },
+  { key: 'valeurAcquisition', label: 'Valeur acquisition', type: 'text' },
+  { key: 'tauxCoupon', label: 'Taux coupon', type: 'text' },
+  { key: 'dateAcquisition', label: 'Date acquisition', type: 'text' },
+  { key: 'dateEcheance', label: 'Date echeance', type: 'text' },
+  { key: 'statut', label: 'Statut', type: 'text' },
+  { key: 'actif', label: 'Actif', type: 'checkbox' }
+];
+
+const assetLinkField: FieldConfig = { key: 'actifId', label: 'Actif', type: 'select', optionEntityKey: 'financialAssets' };
+
+entityConfigs.push(
+  {
+    key: 'assetAcquisitions',
+    title: 'Acquisition d\'actif',
+    group: 'Investissements',
+    endpoint: '/investissements/acquisitions',
+    displayColumns: ['code', 'libelle', 'compagnieId', 'filialeId', 'montantNominal', 'statut'],
+    fields: acquisitionFields
+  },
+  {
+    key: 'financialAssets',
+    title: 'Actifs financiers',
+    group: 'Investissements',
+    endpoint: '/investissements/actifs',
+    displayColumns: ['code', 'libelle', 'emetteur', 'valeurNominale', 'dateEcheance', 'statut'],
+    fields: financialAssetFields
+  },
+  {
+    key: 'assetMaturities',
+    title: 'Tombees',
+    group: 'Investissements',
+    endpoint: '/investissements/tombees',
+    displayColumns: ['actifId', 'typeTombee', 'datePrevue', 'montantAttendu', 'montantRecu', 'statut'],
+    fields: [
+      assetLinkField,
+      { key: 'typeTombee', label: 'Type tombee', type: 'text', required: true },
+      { key: 'datePrevue', label: 'Date prevue', type: 'text' },
+      { key: 'dateReception', label: 'Date reception', type: 'text' },
+      { key: 'montantAttendu', label: 'Montant attendu', type: 'text' },
+      { key: 'montantRecu', label: 'Montant recu', type: 'text' },
+      { key: 'statut', label: 'Statut', type: 'text' },
+      { key: 'referencePiece', label: 'Reference piece', type: 'text' },
+      { key: 'commentaire', label: 'Commentaire', type: 'textarea' }
+    ]
+  },
+  {
+    key: 'amortizationSchedules',
+    title: 'Tableaux amortissement',
+    group: 'Investissements',
+    endpoint: '/investissements/amortissements',
+    displayColumns: ['actifId', 'numeroEcheance', 'dateEcheance', 'capitalDebut', 'interet', 'capitalFin'],
+    fields: [
+      assetLinkField,
+      { key: 'numeroEcheance', label: 'Numero echeance', type: 'text' },
+      { key: 'dateEcheance', label: 'Date echeance', type: 'text' },
+      { key: 'capitalDebut', label: 'Capital debut', type: 'text' },
+      { key: 'interet', label: 'Interet', type: 'text' },
+      { key: 'amortissement', label: 'Amortissement', type: 'text' },
+      { key: 'capitalFin', label: 'Capital fin', type: 'text' },
+      { key: 'statut', label: 'Statut', type: 'text' }
+    ]
+  },
+  {
+    key: 'assetDocuments',
+    title: 'Documents actifs',
+    group: 'Investissements',
+    endpoint: '/investissements/documents',
+    displayColumns: ['acquisitionId', 'actifId', 'typeDocument', 'nomFichier', 'obligatoire', 'valide'],
+    fields: [
+      { key: 'acquisitionId', label: 'Dossier acquisition', type: 'select', optionEntityKey: 'assetAcquisitions' },
+      assetLinkField,
+      { key: 'typeDocument', label: 'Type document', type: 'text', required: true },
+      { key: 'nomFichier', label: 'Nom fichier', type: 'text', required: true },
+      { key: 'referenceStockage', label: 'Reference stockage', type: 'text' },
+      { key: 'obligatoire', label: 'Obligatoire', type: 'checkbox' },
+      { key: 'valide', label: 'Valide', type: 'checkbox' }
+    ]
+  },
+  {
+    key: 'assetRatings',
+    title: 'Ratings actifs',
+    group: 'Investissements',
+    endpoint: '/investissements/ratings',
+    displayColumns: ['actifId', 'agence', 'noteEmetteur', 'notePays', 'dateNotation', 'perspective'],
+    fields: [
+      assetLinkField,
+      { key: 'agence', label: 'Agence', type: 'text', required: true },
+      { key: 'noteEmetteur', label: 'Note emetteur', type: 'text' },
+      { key: 'notePays', label: 'Note pays', type: 'text' },
+      { key: 'dateNotation', label: 'Date notation', type: 'text' },
+      { key: 'perspective', label: 'Perspective', type: 'text' },
+      { key: 'commentaire', label: 'Commentaire', type: 'textarea' }
+    ]
+  },
+  {
+    key: 'accountingMappings',
+    title: 'Mappings SYSCOHADA',
+    group: 'Comptabilisation',
+    endpoint: '/investissements/mappings-comptables',
+    displayColumns: ['typeOperation', 'categorieActifId', 'compteDebit', 'compteCredit', 'journalCode', 'actif'],
+    fields: [
+      { key: 'typeOperation', label: 'Type operation', type: 'text', required: true },
+      { key: 'categorieActifId', label: 'Categorie actif', type: 'select', optionEntityKey: 'assetCategories' },
+      { key: 'compteDebit', label: 'Compte debit', type: 'text', required: true },
+      { key: 'compteCredit', label: 'Compte credit', type: 'text', required: true },
+      { key: 'journalCode', label: 'Journal', type: 'text' },
+      { key: 'libelle', label: 'Libelle', type: 'text' },
+      { key: 'actif', label: 'Actif', type: 'checkbox' }
+    ]
+  },
+  {
+    key: 'sageExports',
+    title: 'Exports SAGE',
+    group: 'Comptabilisation',
+    endpoint: '/investissements/exports-sage',
+    displayColumns: ['referenceExport', 'compagnieId', 'periodeDebut', 'periodeFin', 'formatCible', 'statut'],
+    fields: [
+      { key: 'referenceExport', label: 'Reference export', type: 'text', required: true },
+      { key: 'compagnieId', label: 'Compagnie', type: 'select', optionEntityKey: 'companies', optionLabelKey: 'raisonSociale' },
+      { key: 'periodeDebut', label: 'Periode debut', type: 'text' },
+      { key: 'periodeFin', label: 'Periode fin', type: 'text' },
+      { key: 'formatCible', label: 'Format cible', type: 'text' },
+      { key: 'modeExport', label: 'Mode export', type: 'text' },
+      { key: 'statut', label: 'Statut', type: 'text' },
+      { key: 'nombreEcritures', label: 'Nombre ecritures', type: 'text' },
+      { key: 'montantTotal', label: 'Montant total', type: 'text' },
+      { key: 'fichierGenere', label: 'Fichier genere', type: 'text' },
+      { key: 'messageErreur', label: 'Message erreur', type: 'textarea' }
+    ]
+  },
+  {
+    key: 'regulatoryReports',
+    title: 'Etats CIMA',
+    group: 'Reporting',
+    endpoint: '/investissements/etats-cima',
+    displayColumns: ['codeEtat', 'libelle', 'compagnieId', 'periodeDebut', 'periodeFin', 'statut'],
+    fields: [
+      { key: 'codeEtat', label: 'Code etat', type: 'text', required: true },
+      { key: 'libelle', label: 'Libelle', type: 'text', required: true },
+      { key: 'compagnieId', label: 'Compagnie', type: 'select', optionEntityKey: 'companies', optionLabelKey: 'raisonSociale' },
+      { key: 'periodeDebut', label: 'Periode debut', type: 'text' },
+      { key: 'periodeFin', label: 'Periode fin', type: 'text' },
+      { key: 'statut', label: 'Statut', type: 'text' },
+      { key: 'fichierGenere', label: 'Fichier genere', type: 'text' },
+      { key: 'commentaire', label: 'Commentaire', type: 'textarea' }
+    ]
+  }
+);
+
 export const entityConfigByKey = new Map(entityConfigs.map((config) => [config.key, config]));
 
 export const groupedEntityConfigs = entityConfigs.reduce<Record<string, EntityConfig[]>>((groups, config) => {

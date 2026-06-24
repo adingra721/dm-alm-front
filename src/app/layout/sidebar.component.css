@@ -88,6 +88,11 @@
   display: none;
 }
 
+.settings-menu {
+  display: block;
+  margin-bottom: 10px;
+}
+
 .settings-menu > summary {
   justify-content: flex-start;
   gap: 6px;
@@ -97,6 +102,26 @@
   font-weight: 900;
   letter-spacing: .04em;
   padding: 11px 12px;
+  text-transform: uppercase;
+  transition: background .18s ease;
+}
+
+.settings-menu.menu-active > summary {
+  background: rgba(255, 255, 255, .2);
+  color: #ffffff;
+}
+
+.settings-menu.direct-menu.menu-active {
+  background: rgba(48, 113, 166, .72);
+  padding: 8px 0;
+}
+
+.settings-menu.direct-menu.menu-active > summary {
+  background: rgba(255, 255, 255, .08);
+}
+
+.settings-menu.menu-active {
+  overflow: hidden;
 }
 
 .settings-menu > summary::after,
@@ -119,6 +144,10 @@
   margin-top: 10px;
 }
 
+.menu-links {
+  padding: 4px 0 6px;
+}
+
 .nav-group {
   padding: 4px 0;
 }
@@ -130,7 +159,6 @@
   font-weight: 700;
   letter-spacing: .04em;
   padding: 8px 10px;
-  text-transform: uppercase;
 }
 
 .nav-group.group-active {

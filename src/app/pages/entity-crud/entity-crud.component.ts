@@ -1,4 +1,5 @@
 import { NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -397,6 +398,22 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
     this.saving = false;
     this.loading = false;
     this.error = "Une erreur est survenue pendant l'appel API.";
+
+    if (error instanceof HttpErrorResponse) {
+      if (error.status === 0) {
+        this.error = "API indisponible. Verifiez que le backend Spring Boot est demarre sur http://localhost:8080.";
+        return;
+      }
+
+      if (error.status === 200) {
+        this.error = "La route API retourne une reponse non JSON. Verifiez que le backend Spring Boot est demarre et que le proxy /api pointe bien vers http://localhost:8080.";
+        return;
+      }
+
+      this.error = error.error?.message ?? `Erreur API (${error.status}) : ${error.statusText || 'requete impossible'}.`;
+      return;
+    }
+
     if (typeof error === 'object' && error !== null && 'error' in error) {
       const apiError = (error as { error?: { message?: string } }).error;
       this.error = apiError?.message ?? this.error;

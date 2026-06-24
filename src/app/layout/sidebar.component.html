@@ -8,18 +8,25 @@
   </div>
 
   <nav class="nav">
-    <details class="settings-menu" open>
+    <details
+      *ngFor="let menu of menus; let firstMenu = first"
+      class="settings-menu"
+      [class.direct-menu]="menu.items.length"
+      routerLinkActive="menu-active"
+      #menuActive="routerLinkActive"
+      [attr.open]="firstMenu ? '' : null"
+    >
       <summary>
-        <i class="fa fa-cog menu-icon" aria-hidden="true"></i>
-        <span>Administration</span>
+        <i [class]="menu.icon + ' menu-icon'" aria-hidden="true"></i>
+        <span>{{ menu.title }}</span>
       </summary>
 
-      <section *ngFor="let group of groups | keyvalue; let first = first">
+      <section *ngFor="let group of menu.groups; let firstGroup = first">
         <details
           class="nav-group"
           routerLinkActive="group-active"
           #groupActive="routerLinkActive"
-          [open]="first || groupActive.isActive"
+          [attr.open]="firstGroup || groupActive.isActive ? '' : null"
         >
           <summary>{{ group.key }}</summary>
           <a
@@ -31,6 +38,17 @@
             {{ item.title }}
           </a>
         </details>
+      </section>
+
+      <section class="menu-links" *ngIf="menu.items.length">
+        <a
+          *ngFor="let item of menu.items"
+          [routerLink]="['/parametrage', item.key]"
+          routerLinkActive="active"
+          [attr.title]="collapsed ? item.title : null"
+        >
+          {{ item.title }}
+        </a>
       </section>
     </details>
   </nav>

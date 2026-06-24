@@ -1,6 +1,11 @@
 {
   "name": "cima-alm-frontend",
   "version": "0.0.1",
+  "engines": {
+    "node": "22.x",
+    "npm": "10.x"
+  },
+  "packageManager": "npm@10.9.2",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.conf.json",

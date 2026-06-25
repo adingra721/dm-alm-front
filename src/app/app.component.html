@@ -1,4 +1,6 @@
-<div class="shell" [class.sidebar-collapsed]="sidebarCollapsed">
+<router-outlet *ngIf="loginPage" />
+
+<div class="shell" *ngIf="!loginPage" [class.sidebar-collapsed]="sidebarCollapsed">
   <app-sidebar [collapsed]="false" [attr.aria-hidden]="sidebarCollapsed" />
   <main class="main">
     <header class="app-header">
@@ -31,8 +33,12 @@
             <i class="fa fa-sun-o" aria-hidden="true"></i>
           </button>
           <span class="action-separator" aria-hidden="true"></span>
+          <button type="button" aria-label="Deconnexion" (click)="auth.logout()">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+          </button>
+          <span class="action-separator" aria-hidden="true"></span>
           <div class="user-avatar" aria-label="Utilisateur SALA ALLIANZ">
-            <span>SA</span>
+            <span>{{ (auth.currentUser?.username || 'SA').slice(0, 2).toUpperCase() }}</span>
             <i aria-hidden="true"></i>
           </div>
         </div>

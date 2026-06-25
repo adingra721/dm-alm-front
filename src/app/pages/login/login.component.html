@@ -1,0 +1,31 @@
+<main class="login-page">
+  <section class="login-card">
+    <div class="brand-panel">
+      <img src="/images/cima-alm-logo.png" alt="CIMA ALM">
+      <span>Plateforme ALM Assurance</span>
+      <h1>Connexion securiée</h1>
+      <p>Accedez aux modules Investissements, Comptabilisation, Reporting et Administration.</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+      <h2>Bienvenue</h2>
+      <p>Veuillez vous authentifier pour continuer.</p>
+
+      <label>
+        <span>Identifiant</span>
+        <input type="text" formControlName="username" autocomplete="username">
+      </label>
+
+      <label>
+        <span>Mot de passe</span>
+        <input type="password" formControlName="password" autocomplete="current-password">
+      </label>
+
+      <div class="login-error" *ngIf="error">{{ error }}</div>
+
+      <button type="submit" [disabled]="loading">
+        {{ loading ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </form>
+  </section>
+</main>

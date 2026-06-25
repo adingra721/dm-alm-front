@@ -151,31 +151,46 @@ h2 {
 }
 
 .editor {
-  padding: 20px;
+  border-color: #dedede;
+  background: #ffffff;
+  padding: 26px 28px 24px;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 14px;
-  margin-top: 16px;
+  grid-template-columns: minmax(260px, .9fr) minmax(340px, 1.1fr);
+  grid-auto-flow: dense;
+  gap: 26px 42px;
+  margin-top: 24px;
 }
 
 label {
   display: grid;
-  gap: 7px;
-  color: #40516f;
-  font-size: 13px;
-  font-weight: 800;
+  align-content: start;
+  gap: 9px;
+  color: #3f4147;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+
+.field-label strong {
+  color: #ff4a4a;
+  margin-left: 1px;
+}
+
+.textarea-field {
+  grid-column: 2;
+  grid-row: span 3;
 }
 
 label.checkbox {
   align-content: end;
   grid-template-columns: auto 1fr;
-  min-height: 68px;
+  min-height: 76px;
 }
 
-label.checkbox span {
+label.checkbox .field-label {
   grid-column: 2;
   grid-row: 1;
 }
@@ -191,27 +206,41 @@ input,
 select,
 textarea {
   width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid #d4d4d4;
+  border-radius: 0;
   background: #ffffff;
-  color: var(--text);
-  padding: 10px 12px;
+  color: #33353a;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 9px 12px;
   outline: none;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #9bbcff;
-  box-shadow: 0 0 0 3px rgba(47, 110, 234, .12);
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(47, 110, 234, .08);
+}
+
+input,
+select {
+  min-height: 40px;
 }
 
 textarea {
+  min-height: 268px;
   resize: vertical;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: #a8a8a8;
+}
+
 .actions {
-  margin-top: 16px;
+  justify-content: flex-end;
+  margin-top: 26px;
 }
 
 .primary,
@@ -313,7 +342,7 @@ th,
 td {
   border-bottom: 1px solid #edf1f8;
   color: #64728f;
-  padding: 10px 16px;
+  padding: 5px 16px;
   text-align: left;
   vertical-align: middle;
 }
@@ -354,7 +383,7 @@ tbody td:nth-child(3) {
 
 .filter-row th {
   background: #f9fbff;
-  padding: 7px 10px 9px;
+  padding: 5px 10px 7px;
 }
 
 .filter-row input {
@@ -364,7 +393,7 @@ tbody td:nth-child(3) {
   color: #526078;
   font-size: 13px;
   font-weight: 600;
-  padding: 7px 9px;
+  padding: 5px 9px;
   text-transform: none;
 }
 
@@ -416,7 +445,7 @@ tbody td:nth-child(3) {
   align-items: center;
   justify-content: center;
   min-width: 74px;
-  padding: 6px 8px;
+  padding: 3px 8px;
   font-size: 12px;
   white-space: nowrap;
 }
@@ -591,6 +620,22 @@ tbody td:nth-child(3) {
 
   .form-grid {
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+  }
+
+  label {
+    font-size: 16px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 15px;
+    padding: 11px 12px;
+  }
+
+  textarea {
+    min-height: 180px;
   }
 
   .table-header {
@@ -652,6 +697,11 @@ tbody td:nth-child(3) {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .textarea-field {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   table {

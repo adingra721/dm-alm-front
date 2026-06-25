@@ -1,13 +1,15 @@
+import { NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { EntityConfig, entityConfigByKey } from './core/entity-config';
+import { AuthService } from './core/auth.service';
 import { SidebarComponent } from './layout/sidebar.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent],
+  imports: [NgIf, RouterOutlet, SidebarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -16,8 +18,9 @@ export class AppComponent {
   sidebarCollapsed = false;
   pageTitle = 'Dashboard';
   pageGroup = 'Dashboard';
+  loginPage = false;
 
-  constructor(private readonly router: Router) {
+  constructor(private readonly router: Router, readonly auth: AuthService) {
     this.updateHeader(this.router.url);
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
@@ -30,6 +33,7 @@ export class AppComponent {
 
   private updateHeader(url: string): void {
     const cleanUrl = url.split('?')[0].split('#')[0];
+    this.loginPage = cleanUrl === '/login';
     const entityKey = cleanUrl.split('/').filter(Boolean).pop() ?? '';
     const config = entityConfigByKey.get(entityKey);
 

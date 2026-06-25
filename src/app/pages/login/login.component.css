@@ -1,0 +1,128 @@
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  background: linear-gradient(135deg, #123776, #1c4487);
+  padding: 24px;
+}
+
+.login-card {
+  display: grid;
+  width: min(960px, 100%);
+  overflow: hidden;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 30px 80px rgba(8, 26, 58, .28);
+}
+
+.brand-panel {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  background: linear-gradient(145deg, rgba(18, 55, 118, .95), rgba(32, 144, 171, .9));
+  color: #ffffff;
+  padding: 42px;
+}
+
+.brand-panel img {
+  width: 150px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 8px;
+}
+
+.brand-panel span {
+  color: rgba(255, 255, 255, .72);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.brand-panel h1,
+.login-form h2 {
+  margin: 0;
+}
+
+.brand-panel h1 {
+  font-size: 34px;
+  line-height: 1.08;
+}
+
+.brand-panel p,
+.login-form p {
+  margin: 0;
+  color: rgba(255, 255, 255, .74);
+}
+
+.login-form {
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  padding: 42px;
+}
+
+.login-form h2 {
+  color: #1f2937;
+  font-size: 28px;
+}
+
+.login-form p {
+  color: #667085;
+}
+
+.login-form label {
+  display: grid;
+  gap: 8px;
+  color: #40516f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.login-form input {
+  border: 1px solid #dbe3f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: #2f6eea;
+  box-shadow: 0 0 0 3px rgba(47, 110, 234, .14);
+}
+
+.login-form button {
+  border: 0;
+  border-radius: 8px;
+  background: #2f6eea;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 13px 16px;
+}
+
+.login-form button:disabled {
+  cursor: wait;
+  opacity: .72;
+}
+
+.login-error {
+  border: 1px solid #fecdca;
+  border-radius: 8px;
+  background: #fffbfa;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+@media (max-width: 760px) {
+  .login-card {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-panel,
+  .login-form {
+    padding: 28px;
+  }
+}

@@ -18,10 +18,21 @@
     <h2>{{ formMode === 'view' ? 'Voir' : (selected ? 'Modifier' : 'Creer') }}</h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-grid">
-        <label *ngFor="let field of config.fields" [class.checkbox]="field.type === 'checkbox'">
-          <span>{{ field.label }}</span>
+        <label
+          *ngFor="let field of config.fields"
+          [class.checkbox]="field.type === 'checkbox'"
+          [class.textarea-field]="field.type === 'textarea'"
+        >
+          <span class="field-label">
+            {{ field.label }}<strong *ngIf="field.required">*</strong>
+          </span>
           <ng-container [ngSwitch]="field.type">
-            <textarea *ngSwitchCase="'textarea'" [formControlName]="field.key" rows="3"></textarea>
+            <textarea
+              *ngSwitchCase="'textarea'"
+              [formControlName]="field.key"
+              rows="6"
+              [attr.placeholder]="'Saisir ' + field.label.toLowerCase() + '...'"
+            ></textarea>
             <select *ngSwitchCase="'select'" [formControlName]="field.key">
               <option [ngValue]="null">-- Selectionner --</option>
               <option *ngFor="let option of options[field.optionEntityKey || '']" [value]="option['id']">
@@ -29,8 +40,18 @@
               </option>
             </select>
             <input *ngSwitchCase="'checkbox'" type="checkbox" [formControlName]="field.key">
-            <input *ngSwitchCase="'email'" type="email" [formControlName]="field.key">
-            <input *ngSwitchCase="'text'" type="text" [formControlName]="field.key">
+            <input
+              *ngSwitchCase="'email'"
+              type="email"
+              [formControlName]="field.key"
+              [attr.placeholder]="'Saisir ' + field.label.toLowerCase() + '...'"
+            >
+            <input
+              *ngSwitchCase="'text'"
+              type="text"
+              [formControlName]="field.key"
+              [attr.placeholder]="'Saisir ' + field.label.toLowerCase() + '...'"
+            >
           </ng-container>
         </label>
       </div>

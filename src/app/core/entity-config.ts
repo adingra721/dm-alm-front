@@ -128,8 +128,86 @@ export const entityConfigs: EntityConfig[] = [
       { key: 'email', label: 'Email', type: 'email', required: true },
       { key: 'nomComplet', label: 'Nom complet', type: 'text', required: true },
       { key: 'passwordHash', label: 'Hash mot de passe', type: 'text' },
+      { key: 'passwordChangeRequired', label: 'Changement requis', type: 'checkbox' },
+      { key: 'failedLoginAttempts', label: 'Echecs connexion', type: 'text' },
+      { key: 'lockedUntil', label: 'Verrouille jusqu au', type: 'text' },
+      { key: 'lastLoginAt', label: 'Derniere connexion', type: 'text' },
       { key: 'profilId', label: 'Profil', type: 'select', optionEntityKey: 'profiles' },
       { key: 'actif', label: 'Actif', type: 'checkbox' }
+    ]
+  },
+  {
+    key: 'sessions',
+    title: 'Sessions',
+    group: 'Securite',
+    endpoint: '/securite/sessions',
+    displayColumns: ['userId', 'ipAddress', 'expiresAt', 'revokedAt', 'active'],
+    fields: [
+      { key: 'userId', label: 'Utilisateur', type: 'select', optionEntityKey: 'users', optionLabelKey: 'username' },
+      { key: 'sessionToken', label: 'Token session', type: 'textarea' },
+      { key: 'ipAddress', label: 'Adresse IP', type: 'text' },
+      { key: 'userAgent', label: 'User agent', type: 'textarea' },
+      { key: 'expiresAt', label: 'Expire le', type: 'text' },
+      { key: 'revokedAt', label: 'Revoque le', type: 'text' },
+      { key: 'active', label: 'Active', type: 'checkbox' }
+    ]
+  },
+  {
+    key: 'refreshTokens',
+    title: 'Refresh tokens',
+    group: 'Securite',
+    endpoint: '/securite/refresh-tokens',
+    displayColumns: ['userId', 'expiresAt', 'revokedAt', 'active'],
+    fields: [
+      { key: 'userId', label: 'Utilisateur', type: 'select', optionEntityKey: 'users', optionLabelKey: 'username' },
+      { key: 'tokenHash', label: 'Hash token', type: 'textarea' },
+      { key: 'expiresAt', label: 'Expire le', type: 'text' },
+      { key: 'revokedAt', label: 'Revoque le', type: 'text' },
+      { key: 'active', label: 'Active', type: 'checkbox' }
+    ]
+  },
+  {
+    key: 'auditLogs',
+    title: 'Journal audit',
+    group: 'Securite',
+    endpoint: '/securite/audit',
+    displayColumns: ['username', 'action', 'resourceType', 'resourceId', 'ipAddress'],
+    fields: [
+      { key: 'userId', label: 'Utilisateur', type: 'select', optionEntityKey: 'users', optionLabelKey: 'username' },
+      { key: 'username', label: 'Identifiant', type: 'text' },
+      { key: 'action', label: 'Action', type: 'text', required: true },
+      { key: 'resourceType', label: 'Type ressource', type: 'text' },
+      { key: 'resourceId', label: 'ID ressource', type: 'text' },
+      { key: 'ipAddress', label: 'Adresse IP', type: 'text' },
+      { key: 'userAgent', label: 'User agent', type: 'textarea' },
+      { key: 'details', label: 'Details', type: 'textarea' }
+    ]
+  },
+  {
+    key: 'securityParameters',
+    title: 'Parametres securite',
+    group: 'Securite',
+    endpoint: '/securite/parametres',
+    displayColumns: ['code', 'libelle', 'valeur', 'actif'],
+    fields: [
+      { key: 'code', label: 'Code', type: 'text', required: true },
+      { key: 'libelle', label: 'Libelle', type: 'text', required: true },
+      { key: 'valeur', label: 'Valeur', type: 'text', required: true },
+      { key: 'description', label: 'Description', type: 'textarea' },
+      { key: 'actif', label: 'Actif', type: 'checkbox' }
+    ]
+  },
+  {
+    key: 'passwordResetTokens',
+    title: 'Tokens reset password',
+    group: 'Securite',
+    endpoint: '/securite/password-reset-tokens',
+    displayColumns: ['userId', 'expiresAt', 'usedAt'],
+    fields: [
+      { key: 'userId', label: 'Utilisateur', type: 'select', optionEntityKey: 'users', optionLabelKey: 'username' },
+      { key: 'tokenHash', label: 'Hash token', type: 'textarea' },
+      { key: 'expiresAt', label: 'Expire le', type: 'text' },
+      { key: 'usedAt', label: 'Utilise le', type: 'text' }
     ]
   }
 ];

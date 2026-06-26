@@ -15,11 +15,106 @@
   </section>
 
   <section class="editor" *ngIf="showForm">
-    <h2>{{ formMode === 'view' ? 'Voir' : (selected ? 'Modifier' : 'Creer') }}</h2>
     <form [formGroup]="form" (ngSubmit)="save()">
-      <div class="form-grid">
+      <div class="role-form" *ngIf="isRoleForm">
+        <header class="role-form-header">
+          <div class="role-form-title">
+            <span class="role-title-icon"><i class="fa fa-plus" aria-hidden="true"></i></span>
+            <h2>{{ selected ? 'Modifier le role' : 'Creer un nouveau role' }}</h2>
+          </div>
+          <button type="button" class="role-close" aria-label="Fermer" (click)="cancel()">
+            <i class="fa fa-times" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="role-form-body">
+          <section class="role-info-panel">
+            <h3><i class="fa fa-info-circle" aria-hidden="true"></i> Informations du role</h3>
+
+            <label class="role-field">
+              <span>Nom du role <strong>*</strong></span>
+              <input type="text" formControlName="libelle" placeholder="Ex: Gestionnaire">
+            </label>
+
+            <label class="role-field">
+              <span>Code <strong>*</strong></span>
+              <input type="text" formControlName="code" placeholder="EX: MANAGER">
+              <small>Identifiant unique en majuscules</small>
+            </label>
+
+            <div class="role-status">
+              <span>Statut</span>
+              <div class="role-status-options">
+                <label [class.active]="form.get('actif')?.value === true">
+                  <input type="radio" [value]="true" formControlName="actif">
+                  <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                  Actif
+                </label>
+                <label [class.active]="form.get('actif')?.value === false">
+                  <input type="radio" [value]="false" formControlName="actif">
+                  <i class="fa fa-times-circle-o" aria-hidden="true"></i>
+                  Inactif
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="role-permissions-panel">
+            <div class="role-permissions-title">
+              <h3><i class="fa fa-key" aria-hidden="true"></i> Permissions</h3>
+              <span>{{ selectedRolePermissionCount }} selectionnee</span>
+            </div>
+
+            <div class="permission-group" *ngFor="let group of rolePermissionGroups">
+              <label class="permission-group-header">
+                <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                <input
+                  type="checkbox"
+                  [checked]="isRolePermissionGroupSelected(group)"
+                  (change)="toggleRolePermissionGroup(group, $event)"
+                >
+                <strong>{{ group.label }}</strong>
+              </label>
+
+              <label class="permission-row" *ngFor="let permission of group.permissions">
+                <input
+                  type="checkbox"
+                  [checked]="isRolePermissionSelected(permission.key)"
+                  (change)="toggleRolePermission(permission.key, $event)"
+                >
+                <span>
+                  <strong>{{ permission.title }}</strong>
+                  <small>{{ permission.description }}</small>
+                </span>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <footer class="role-form-footer">
+          <button type="button" class="role-cancel" (click)="cancel()">Annuler</button>
+          <button type="submit" class="role-save" [disabled]="saving">
+            <i class="fa fa-check" aria-hidden="true"></i>
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </footer>
+      </div>
+
+      <div class="form-tabs" *ngIf="!isRoleForm && hasFormTabs">
+        <button
+          type="button"
+          class="form-tab"
+          *ngFor="let tab of formTabs"
+          [class.active]="tab.key === activeFormTabKey"
+          (click)="setFormTab(tab.key)"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <div class="form-grid" *ngIf="!isRoleForm && visibleFormFields.length > 0">
         <label
-          *ngFor="let field of config.fields"
+          *ngFor="let field of visibleFormFields"
           [class.checkbox]="field.type === 'checkbox'"
           [class.textarea-field]="field.type === 'textarea'"
         >
@@ -55,8 +150,166 @@
           </ng-container>
         </label>
       </div>
+      <div class="document-upload-panel" *ngIf="!isRoleForm && activeFormTabKey === 'documents' && visibleFormFields.length === 0">
+        <div class="upload-intro">
+          <h3>Ajouter des fichiers</h3>
+          <p>Ajoutez les documents que vous souhaitez associer a cet actif</p>
+        </div>
 
-      <div class="actions">
+        <div class="upload-content">
+          <label class="drop-zone">
+            <input type="file" multiple>
+            <strong>Glissez-deposez les fichiers<br>ici</strong>
+            <i class="fa fa-cloud-upload upload-cloud" aria-hidden="true"></i>
+            <span>-OU-</span>
+            <em>Parcourir les fichiers</em>
+          </label>
+
+          <div class="uploaded-files">
+            <h3>Fichiers ajoutes</h3>
+            <div class="uploaded-file">
+              <span class="file-badge pdf">PDF</span>
+              <strong>Resume.pdf (100%)</strong>
+              <span>Termine</span>
+            </div>
+            <div class="uploaded-file">
+              <span class="file-badge xls">XLS</span>
+              <strong>Sales Est. XLSL (100%)</strong>
+              <span>Termine</span>
+            </div>
+            <div class="uploaded-file">
+              <span class="file-badge doc">DOC</span>
+              <strong>Proposal.Doc (100%)</strong>
+              <span>Termine</span>
+            </div>
+            <div class="uploaded-file">
+              <span class="file-badge mp3">MP3</span>
+              <strong>Calm Down - Rema (100%)</strong>
+              <span>Termine</span>
+            </div>
+            <div class="uploaded-file">
+              <span class="file-badge png">PNG</span>
+              <strong>2d0d73ce-0ca7-4c66-8585-2474d7a0f31e.png (100%)</strong>
+              <span>Termine</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-history" *ngIf="!isRoleForm && activeFormTabKey === 'history' && visibleFormFields.length === 0">
+        <div class="activity-header">
+          <div class="header-content">
+            <h1>Historique d'activite</h1>
+            <p>Consultez toutes vos actions et evenements recents</p>
+          </div>
+          <button type="button" class="btn btn--outline" (click)="clearActivityFilters()">
+            <i class="fa fa-refresh" aria-hidden="true"></i>
+            Actualiser
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <div class="filter-tabs">
+            <button
+              type="button"
+              *ngFor="let filter of filters"
+              class="filter-tab"
+              [class.active]="selectedFilter === filter.value"
+              (click)="selectedFilter = filter.value"
+            >
+              {{ filter.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="timeline-container">
+          <ng-container *ngFor="let group of groupByDate(getFilteredActivities())">
+            <div class="date-group">
+              <div class="date-header">
+                <span class="date-label">{{ group.date }}</span>
+                <span class="date-count">{{ group.items.length }} activite(s)</span>
+              </div>
+
+              <div class="timeline">
+                <div
+                  *ngFor="let activity of group.items"
+                  class="timeline-item"
+                  [ngClass]="getActivityClass(activity.type)"
+                >
+                  <div class="timeline-marker">
+                    <div class="marker-icon">
+                      <i class="fa" [ngClass]="getActivityIcon(activity.type)" aria-hidden="true"></i>
+                    </div>
+                    <div class="marker-line"></div>
+                  </div>
+
+                  <div class="timeline-content">
+                    <div class="activity-card">
+                      <div class="card-header">
+                        <h3 class="activity-title">{{ activity.title }}</h3>
+                        <span class="activity-time">{{ getRelativeTime(activity.timestamp) }}</span>
+                      </div>
+
+                      <p class="activity-description">{{ activity.description }}</p>
+
+                      <div class="activity-user" *ngIf="activity.user">
+                        <div class="user-avatar">{{ activity.user.avatar }}</div>
+                        <span class="user-name">{{ activity.user.name }}</span>
+                      </div>
+
+                      <div class="activity-metadata" *ngIf="activity.metadata">
+                        <div class="meta-item" *ngIf="activity.metadata.ip">
+                          <i class="fa fa-globe" aria-hidden="true"></i>
+                          <span>IP: {{ activity.metadata.ip }}</span>
+                        </div>
+                        <div class="meta-item" *ngIf="activity.metadata.device">
+                          <i class="fa fa-laptop" aria-hidden="true"></i>
+                          <span>{{ activity.metadata.device }}</span>
+                        </div>
+                        <div class="meta-item" *ngIf="activity.metadata.location">
+                          <i class="fa fa-map-marker" aria-hidden="true"></i>
+                          <span>{{ activity.metadata.location }}</span>
+                        </div>
+                        <div class="meta-item" *ngIf="activity.metadata.file">
+                          <i class="fa fa-file-o" aria-hidden="true"></i>
+                          <span>{{ activity.metadata.file }}</span>
+                        </div>
+                        <div class="meta-item meta-item--amount" *ngIf="activity.metadata.amount">
+                          <i class="fa fa-eur" aria-hidden="true"></i>
+                          <span>{{ activity.metadata.amount | number:'1.2-2' }} EUR</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <div *ngIf="getFilteredActivities().length === 0" class="empty-state">
+            <i class="fa fa-clock-o" aria-hidden="true"></i>
+            <h3>Aucune activite trouvee</h3>
+            <p>Modifiez vos filtres pour voir plus d'activites</p>
+            <button type="button" class="btn btn--primary" (click)="clearActivityFilters()">
+              <i class="fa fa-filter" aria-hidden="true"></i>
+              Reinitialiser les filtres
+            </button>
+          </div>
+        </div>
+
+        <div class="load-more" *ngIf="getFilteredActivities().length > 0">
+          <button type="button" class="btn btn--outline btn--lg">
+            <i class="fa fa-arrow-down" aria-hidden="true"></i>
+            Charger plus d'activites
+          </button>
+        </div>
+      </div>
+
+      <div class="tab-empty" *ngIf="!isRoleForm && hasFormTabs && visibleFormFields.length === 0 && activeFormTabKey !== 'documents' && activeFormTabKey !== 'history'">
+        {{ activeFormTab?.description || 'Aucun champ a afficher pour cet onglet.' }}
+      </div>
+
+      <div class="actions" *ngIf="!isRoleForm">
         <button type="submit" class="primary" *ngIf="formMode !== 'view'" [disabled]="saving">{{ saving ? 'Enregistrement...' : 'Enregistrer' }}</button>
         <button type="button" class="secondary" (click)="cancel()">{{ formMode === 'view' ? 'Fermer' : 'Annuler' }}</button>
       </div>
@@ -65,8 +318,10 @@
 
   <section class="table-area">
     <div class="table-header">
-      <button type="button" class="primary compact" (click)="create()">
-        <span class="button-icon" aria-hidden="true">+</span>
+      <button type="button" class="create-button compact" (click)="create()">
+        <span class="button-icon" aria-hidden="true">
+          <i class="fa fa-plus"></i>
+        </span>
         <span>Creer</span>
       </button>
       <div class="table-meta">
@@ -145,19 +400,18 @@
               >
             </td>
             <td *ngFor="let column of visibleColumns">{{ displayValue(row, column) }}</td>
-            <td class="row-actions">
-              <button type="button" class="view" (click)="view(row)">
-                <i class="fa fa-eye button-icon" aria-hidden="true"></i>
-                <span>Voir</span>
-              </button>
-              <button type="button" class="link" (click)="edit(row)">
-                <span class="button-icon" aria-hidden="true">✎</span>
-                <span>Modifier</span>
-              </button>
-              <button type="button" class="danger" (click)="delete(row)">
-                <i class="fa fa-trash button-icon" aria-hidden="true"></i>
-                <span>Supprimer</span>
-              </button>
+            <td class="action-cell">
+              <div class="row-actions">
+                <button type="button" class="view" (click)="view(row)" aria-label="Voir" title="Voir">
+                  <i class="fa fa-eye button-icon" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="link" (click)="edit(row)" aria-label="Modifier" title="Modifier">
+                  <i class="fa fa-pencil button-icon" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="danger" (click)="delete(row)" aria-label="Supprimer" title="Supprimer">
+                  <i class="fa fa-trash button-icon" aria-hidden="true"></i>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>

@@ -11,6 +11,7 @@ export interface AuthUser {
   nomComplet: string;
   profilId?: number;
   actif: boolean;
+  passwordChangeRequired?: boolean;
 }
 
 export interface AuthResponse {
@@ -33,6 +34,18 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseUrl}/login`, { username, password }).pipe(
       tap((response) => this.storeSession(response))
     );
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/change-password`, { currentPassword, newPassword });
+  }
+
+  requestPasswordReset(email: string): Observable<string> {
+    return this.http.post(`${this.baseUrl}/password-reset/request`, { email }, { responseType: 'text' });
+  }
+
+  confirmPasswordReset(token: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/password-reset/confirm`, { token, newPassword });
   }
 
   logout(): void {

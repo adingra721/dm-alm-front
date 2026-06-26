@@ -1,20 +1,44 @@
-import { NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { DecimalPipe, NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, forkJoin, of, switchMap, takeUntil } from 'rxjs';
 import { ApiService, CrudRecord } from '../../core/api.service';
-import { EntityConfig, FieldConfig, entityConfigByKey } from '../../core/entity-config';
+import { EntityConfig, FieldConfig, FormTabConfig, entityConfigByKey } from '../../core/entity-config';
+
+interface ActivityRecord {
+  type: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  date: string;
+  user?: {
+    avatar: string;
+    name: string;
+  };
+  metadata?: {
+    ip?: string;
+    device?: string;
+    location?: string;
+    file?: string;
+    amount?: number;
+  };
+}
+
+interface ActivityGroup {
+  date: string;
+  items: ActivityRecord[];
+}
 
 @Component({
   selector: 'app-entity-crud',
   standalone: true,
-  imports: [NgFor, NgIf, NgSwitch, NgSwitchCase, ReactiveFormsModule],
+  imports: [DecimalPipe, FormsModule, NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, ReactiveFormsModule],
   templateUrl: './entity-crud.component.html',
   styleUrls: ['./entity-crud.component.css']
 })
-export class EntityCrudComponent implements OnInit, OnDestroy {
+export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
   @Input() entityKey?: string;
 
   config?: EntityConfig;
@@ -30,24 +54,116 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
   selectedRowIds = new Set<number>();
   currentPage = 1;
   pageSize = 10;
+  activeFormTabKey = '';
+  searchQuery = '';
+  selectedFilter = 'all';
   readonly pageSizeOptions = [5, 10, 20, 50];
+  readonly rolePermissionGroups = [
+    {
+      key: 'users',
+      label: 'Gestion des utilisateurs',
+      permissions: [
+        { key: 'users.read', title: 'Consulter les utilisateurs', description: 'Voir la liste et les details' },
+        { key: 'users.create', title: 'Creer un utilisateur', description: 'Ajouter de nouveaux utilisateurs' },
+        { key: 'users.update', title: 'Modifier un utilisateur', description: 'Editer les informations' },
+        { key: 'users.delete', title: 'Supprimer un utilisateur', description: 'Retirer du systeme' },
+        { key: 'users.export', title: 'Exporter les utilisateurs', description: 'Telecharger en CSV/Excel' }
+      ]
+    },
+    {
+      key: 'roles',
+      label: 'Gestion des roles',
+      permissions: [
+        { key: 'roles.read', title: 'Consulter les roles', description: 'Voir les roles et permissions' },
+        { key: 'roles.create', title: 'Creer un role', description: 'Ajouter un nouveau role' },
+        { key: 'roles.update', title: 'Modifier un role', description: 'Mettre a jour les permissions' }
+      ]
+    }
+  ];
+  selectedRolePermissionKeys = new Set<string>();
+  readonly filters = [
+    { label: 'Toutes', value: 'all' },
+    { label: 'Connexions', value: 'login' },
+    { label: 'Modifications', value: 'update' },
+    { label: 'Creations', value: 'create' },
+    { label: 'Suppressions', value: 'delete' },
+    { label: 'Paiements', value: 'payment' }
+  ];
+  readonly activities: ActivityRecord[] = [
+    {
+      type: 'login',
+      title: 'Connexion reussie',
+      description: 'Connexion depuis un nouvel appareil detecte.',
+      timestamp: '2024-01-15T09:23:00',
+      date: 'Lundi 15 janvier 2024',
+      user: { avatar: 'AD', name: 'Admin CIMA' },
+      metadata: { ip: '192.168.1.42', device: 'MacBook Pro', location: 'Paris, France' }
+    },
+    {
+      type: 'update',
+      title: 'Profil mis a jour',
+      description: 'Les informations du profil ont ete modifiees.',
+      timestamp: '2024-01-15T11:45:00',
+      date: 'Lundi 15 janvier 2024',
+      user: { avatar: 'AD', name: 'Admin CIMA' },
+      metadata: { ip: '192.168.1.42', device: 'MacBook Pro', location: 'Paris, France' }
+    },
+    {
+      type: 'create',
+      title: 'Nouveau dossier cree',
+      description: 'Le dossier d acquisition a ete cree.',
+      timestamp: '2024-01-15T14:30:00',
+      date: 'Lundi 15 janvier 2024',
+      user: { avatar: 'NA', name: 'Nadia Assurances' },
+      metadata: { ip: '192.168.1.42', device: 'MacBook Pro', location: 'Paris, France' }
+    },
+    {
+      type: 'comment',
+      title: 'Commentaire ajoute',
+      description: 'Commentaire sur la validation du dossier.',
+      timestamp: '2024-01-14T16:12:00',
+      date: 'Dimanche 14 janvier 2024',
+      user: { avatar: 'DA', name: 'Direction Financiere' },
+      metadata: { ip: '192.168.1.42', device: 'MacBook Pro', location: 'Paris, France' }
+    },
+    {
+      type: 'share',
+      title: 'Document partage',
+      description: 'Le fichier "Rapport Q4" a ete partage avec l equipe.',
+      timestamp: '2024-01-14T10:00:00',
+      date: 'Dimanche 14 janvier 2024',
+      user: { avatar: 'DG', name: 'Direction Generale' },
+      metadata: { ip: '10.0.0.5', device: 'iPhone 15', location: 'Lyon, France', file: 'Rapport Q4.pdf' }
+    },
+    {
+      type: 'payment',
+      title: 'Paiement enregistre',
+      description: 'Un paiement lie au dossier a ete enregistre.',
+      timestamp: '2024-01-13T08:40:00',
+      date: 'Samedi 13 janvier 2024',
+      user: { avatar: 'CP', name: 'Comptabilite' },
+      metadata: { amount: 2500000, file: 'Piece comptable.pdf' }
+    }
+  ];
   error = '';
   success = '';
 
   readonly form: UntypedFormGroup;
   private readonly destroy$ = new Subject<void>();
+  private readonly loadCancel$ = new Subject<void>();
+  private configuredEntityKey = '';
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly api: ApiService,
-    private readonly fb: UntypedFormBuilder
+    private readonly fb: UntypedFormBuilder,
+    private readonly cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({});
   }
 
   ngOnInit(): void {
     if (this.entityKey) {
-      this.configureEntity(this.entityKey);
       return;
     }
 
@@ -58,22 +174,43 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
       });
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    const entityKey = changes['entityKey']?.currentValue;
+    if (entityKey) {
+      this.configureEntity(entityKey);
+    }
+  }
+
   ngOnDestroy(): void {
+    this.loadCancel$.next();
+    this.loadCancel$.complete();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   private configureEntity(entityKey: string): void {
+    if (this.configuredEntityKey === entityKey) {
+      return;
+    }
+
     const config = entityConfigByKey.get(entityKey);
     if (!config) {
       this.error = 'Ressource inconnue.';
       return;
     }
 
+    this.loadCancel$.next();
+    this.configuredEntityKey = entityKey;
     this.config = config;
+    this.rows = [];
+    this.options = {};
+    this.activeFormTabKey = config.formTabs?.[0]?.key ?? '';
+    this.error = '';
+    this.success = '';
     this.buildForm(config);
     this.clearFilters();
     this.closeForm();
+    this.cdr.detectChanges();
     this.loadData();
   }
 
@@ -129,6 +266,40 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
 
   get selectedCount(): number {
     return this.selectedRowIds.size;
+  }
+
+  get formTabs(): FormTabConfig[] {
+    return this.config?.formTabs ?? [];
+  }
+
+  get hasFormTabs(): boolean {
+    return this.formTabs.length > 0;
+  }
+
+  get isRoleForm(): boolean {
+    return this.config?.key === 'roles';
+  }
+
+  get selectedRolePermissionCount(): number {
+    return this.selectedRolePermissionKeys.size;
+  }
+
+  get activeFormTab(): FormTabConfig | undefined {
+    return this.formTabs.find((tab) => tab.key === this.activeFormTabKey);
+  }
+
+  get visibleFormFields(): FieldConfig[] {
+    if (!this.config) {
+      return [];
+    }
+
+    const tab = this.activeFormTab;
+    if (!tab?.fieldKeys?.length) {
+      return this.hasFormTabs ? [] : this.config.fields;
+    }
+
+    const fieldKeys = new Set(tab.fieldKeys);
+    return this.config.fields.filter((field) => fieldKeys.has(field.key));
   }
 
   get allPagedRowsSelected(): boolean {
@@ -197,6 +368,7 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
     this.selected = row;
     this.formMode = 'view';
     this.showForm = true;
+    this.openFirstFormTab();
     this.success = '';
     this.form.patchValue(row);
     this.form.disable();
@@ -247,6 +419,7 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
     this.selected = row;
     this.formMode = 'edit';
     this.showForm = true;
+    this.openFirstFormTab();
     this.success = '';
     this.form.enable();
     this.form.patchValue(row);
@@ -259,7 +432,40 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
     this.error = '';
     this.form.enable();
     this.resetForm();
+    this.openFirstFormTab();
     this.showForm = true;
+  }
+
+  setFormTab(tabKey: string): void {
+    this.activeFormTabKey = tabKey;
+  }
+
+  isRolePermissionSelected(permissionKey: string): boolean {
+    return this.selectedRolePermissionKeys.has(permissionKey);
+  }
+
+  isRolePermissionGroupSelected(group: { permissions: Array<{ key: string }> }): boolean {
+    return group.permissions.every((permission) => this.isRolePermissionSelected(permission.key));
+  }
+
+  toggleRolePermission(permissionKey: string, event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+    if (checkbox.checked) {
+      this.selectedRolePermissionKeys.add(permissionKey);
+    } else {
+      this.selectedRolePermissionKeys.delete(permissionKey);
+    }
+  }
+
+  toggleRolePermissionGroup(group: { permissions: Array<{ key: string }> }, event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+    group.permissions.forEach((permission) => {
+      if (checkbox.checked) {
+        this.selectedRolePermissionKeys.add(permission.key);
+      } else {
+        this.selectedRolePermissionKeys.delete(permission.key);
+      }
+    });
   }
 
   cancel(): void {
@@ -290,10 +496,14 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
       next: () => {
         this.success = this.selected ? 'Element modifie avec succes.' : 'Element cree avec succes.';
         this.closeForm();
+        this.cdr.detectChanges();
         this.loadData();
       },
       error: (error) => this.handleError(error),
-      complete: () => (this.saving = false)
+      complete: () => {
+        this.saving = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -310,10 +520,74 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
     this.api.delete(this.config, Number(row['id'])).subscribe({
       next: () => {
         this.success = 'Element supprime avec succes.';
+        this.cdr.detectChanges();
         this.loadData();
       },
       error: (error) => this.handleError(error)
     });
+  }
+
+  getFilteredActivities(): ActivityRecord[] {
+    const query = this.searchQuery.trim().toLowerCase();
+    return this.activities.filter((activity) => {
+      const matchesFilter = this.selectedFilter === 'all' || activity.type === this.selectedFilter;
+      const matchesQuery = !query ||
+        activity.title.toLowerCase().includes(query) ||
+        activity.description.toLowerCase().includes(query) ||
+        activity.date.toLowerCase().includes(query) ||
+        activity.user?.name.toLowerCase().includes(query);
+      return matchesFilter && matchesQuery;
+    });
+  }
+
+  groupByDate(activities: ActivityRecord[]): ActivityGroup[] {
+    return activities.reduce<ActivityGroup[]>((groups, activity) => {
+      const group = groups.find((item) => item.date === activity.date);
+      if (group) {
+        group.items.push(activity);
+      } else {
+        groups.push({ date: activity.date, items: [activity] });
+      }
+      return groups;
+    }, []);
+  }
+
+  getActivityClass(type: string): string {
+    const classes: Record<string, string> = {
+      login: 'activity--success',
+      update: 'activity--warning',
+      create: 'activity--info',
+      delete: 'activity--danger',
+      payment: 'activity--primary',
+      comment: 'activity--neutral',
+      share: 'activity--primary'
+    };
+    return classes[type] ?? 'activity--neutral';
+  }
+
+  getActivityIcon(type: string): string {
+    const icons: Record<string, string> = {
+      login: 'fa-sign-in',
+      update: 'fa-pencil',
+      create: 'fa-plus-circle',
+      delete: 'fa-trash',
+      payment: 'fa-credit-card',
+      comment: 'fa-commenting-o',
+      share: 'fa-share-alt'
+    };
+    return icons[type] ?? 'fa-clock-o';
+  }
+
+  getRelativeTime(timestamp: string): string {
+    return new Date(timestamp).toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  clearActivityFilters(): void {
+    this.searchQuery = '';
+    this.selectedFilter = 'all';
   }
 
   private buildForm(config: EntityConfig): void {
@@ -341,17 +615,27 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     this.error = '';
+    this.cdr.detectChanges();
 
-    this.loadOptions(this.config)
-      .pipe(switchMap(() => this.config ? this.api.findAll(this.config) : of([])))
+    const config = this.config;
+
+    this.loadOptions(config)
+      .pipe(
+        switchMap(() => this.api.findAll(config)),
+        takeUntil(this.loadCancel$)
+      )
       .subscribe({
         next: (rows) => {
           this.rows = rows;
           this.currentPage = 1;
           this.clearSelection();
+          this.cdr.detectChanges();
         },
         error: (error) => this.handleError(error),
-        complete: () => (this.loading = false)
+        complete: () => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }
       });
   }
 
@@ -371,6 +655,7 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
     return forkJoin(requests).pipe(
       switchMap((options) => {
         this.options = options;
+        this.cdr.detectChanges();
         return of(options);
       })
     );
@@ -389,6 +674,10 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
     this.showForm = false;
     this.form.enable();
     this.resetForm();
+  }
+
+  private openFirstFormTab(): void {
+    this.activeFormTabKey = this.config?.formTabs?.[0]?.key ?? '';
   }
 
   private normalizePayload(value: CrudRecord): CrudRecord {
@@ -413,15 +702,18 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
     if (error instanceof HttpErrorResponse) {
       if (error.status === 0) {
         this.error = "API indisponible. Verifiez que le backend Spring Boot est demarre sur http://localhost:8080.";
+        this.cdr.detectChanges();
         return;
       }
 
       if (error.status === 200) {
         this.error = "La route API retourne une reponse non JSON. Verifiez que le backend Spring Boot est demarre et que le proxy /api pointe bien vers http://localhost:8080.";
+        this.cdr.detectChanges();
         return;
       }
 
       this.error = error.error?.message ?? `Erreur API (${error.status}) : ${error.statusText || 'requete impossible'}.`;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -429,5 +721,7 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
       const apiError = (error as { error?: { message?: string } }).error;
       this.error = apiError?.message ?? this.error;
     }
+
+    this.cdr.detectChanges();
   }
 }

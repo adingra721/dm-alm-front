@@ -42,7 +42,7 @@
 
 .topbar {
   display: flex;
-  min-height: 86px;
+  min-height: 60px;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
@@ -63,20 +63,20 @@
 .topbar-title h1 {
   margin: 0;
   color: #1f2937;
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .menu-button,
 .topbar-actions button {
   display: inline-flex;
-  width: 38px;
-  height: 38px;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  color: #667085;
-  font-size: 21px;
+  width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: #667085;
+    font-size: 18px;
 }
 
 .menu-button:hover,
@@ -122,24 +122,37 @@
 
 .header-breadcrumb {
   display: flex;
-  min-height: 64px;
+  min-height: 46px;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   border-top: 1px solid #eef2f7;
   padding: 0 32px;
-  color: #667085;
-  font-size: 18px;
-  font-weight: 700;
+  color: #536273;
+  font-size: 16px;
+  font-weight: 300;
 }
 
-.header-breadcrumb a {
-  color: #0d6efd;
-  text-decoration: underline;
+.breadcrumb-home,
+.breadcrumb-parent {
+  color: #17b99f;
+}
+
+.breadcrumb-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  text-decoration: none;
+}
+
+.breadcrumb-separator {
+  color: #536273;
+  font-size: 8px;
 }
 
 .header-breadcrumb strong {
-  color: #1f2937;
-  font-weight: 800;
+  color: #536273;
+  font-weight: 500;
 }
 
 .content {
@@ -202,7 +215,7 @@
   }
 
   .topbar {
-    min-height: 74px;
+    min-height: 60px;
     padding: 0 18px;
   }
 
@@ -212,8 +225,17 @@
 
   .header-breadcrumb {
     min-height: 54px;
+    gap: 14px;
     padding: 0 18px;
     font-size: 16px;
+  }
+
+  .breadcrumb-home {
+    font-size: 18px;
+  }
+
+  .breadcrumb-separator {
+    font-size: 14px;
   }
 
   .content {
@@ -264,6 +286,11 @@
     gap: 8px;
     padding: 12px;
     font-size: 14px;
+  }
+
+  .breadcrumb-home,
+  .breadcrumb-separator {
+    font-size: 13px;
   }
 
   .content {

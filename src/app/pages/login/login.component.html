@@ -13,15 +13,23 @@
 
       <label>
         <span>Identifiant</span>
-        <input type="text" formControlName="username" autocomplete="username">
+        <span class="input-field">
+          <i class="fa fa-user" aria-hidden="true"></i>
+          <input type="text" formControlName="username" autocomplete="username">
+        </span>
       </label>
 
       <label>
         <span>Mot de passe</span>
-        <input type="password" formControlName="password" autocomplete="current-password">
+        <span class="input-field">
+          <i class="fa fa-lock" aria-hidden="true"></i>
+          <input type="password" formControlName="password" autocomplete="current-password">
+        </span>
       </label>
 
       <div class="login-error" *ngIf="error">{{ error }}</div>
+
+      <a routerLink="/forgot-password" class="forgot-link">Mot de passe oublié ?</a>
 
       <button type="submit" [disabled]="loading">
         {{ loading ? 'Connexion...' : 'Se connecter' }}

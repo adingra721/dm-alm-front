@@ -10,6 +10,13 @@ export interface FieldConfig {
   optionLabelKey?: string;
 }
 
+export interface FormTabConfig {
+  key: string;
+  label: string;
+  fieldKeys?: string[];
+  description?: string;
+}
+
 export interface EntityConfig {
   key: string;
   title: string;
@@ -17,6 +24,7 @@ export interface EntityConfig {
   endpoint: string;
   displayColumns: string[];
   fields: FieldConfig[];
+  formTabs?: FormTabConfig[];
 }
 
 const referenceFields: FieldConfig[] = [
@@ -260,7 +268,24 @@ entityConfigs.push(
     group: 'Investissements',
     endpoint: '/investissements/acquisitions',
     displayColumns: ['code', 'libelle', 'compagnieId', 'filialeId', 'montantNominal', 'statut'],
-    fields: acquisitionFields
+    fields: acquisitionFields,
+    formTabs: [
+      {
+        key: 'general',
+        label: 'Information generale',
+        fieldKeys: acquisitionFields.map((field) => field.key)
+      },
+      {
+        key: 'documents',
+        label: 'Document',
+        description: 'Les documents rattaches a cette acquisition seront geres ici.'
+      },
+      {
+        key: 'history',
+        label: 'Historique',
+        description: 'Historique des actions realisees sur cette acquisition.'
+      }
+    ]
   },
   {
     key: 'financialAssets',
@@ -268,7 +293,34 @@ entityConfigs.push(
     group: 'Investissements',
     endpoint: '/investissements/actifs',
     displayColumns: ['code', 'libelle', 'emetteur', 'valeurNominale', 'dateEcheance', 'statut'],
-    fields: financialAssetFields
+    fields: financialAssetFields,
+    formTabs: [
+      {
+        key: 'general',
+        label: 'Information generale',
+        fieldKeys: financialAssetFields.map((field) => field.key)
+      },
+      {
+        key: 'documents',
+        label: 'Document',
+        description: 'Les documents rattaches a cet actif seront geres ici.'
+      },
+      {
+        key: 'amortissement',
+        label: 'Amortissement',
+        description: 'Le tableau d amortissement de cet actif sera gere ici.'
+      },
+      {
+        key: 'tombee',
+        label: 'Tombee',
+        description: 'Les tombees prevues et encaissees de cet actif seront gerees ici.'
+      },
+      {
+        key: 'history',
+        label: 'Historique',
+        description: 'Historique des actions realisees sur cet actif.'
+      }
+    ]
   },
   {
     key: 'assetMaturities',
@@ -356,8 +408,7 @@ entityConfigs.push(
   {
     key: 'sageExports',
     title: 'Exports SAGE',
-    group: 'Comptabilisation',
-    endpoint: '/investissements/exports-sage',
+    group: 'Comptabilisation',    endpoint: '/investissements/exports-sage',
     displayColumns: ['referenceExport', 'compagnieId', 'periodeDebut', 'periodeFin', 'formatCible', 'statut'],
     fields: [
       { key: 'referenceExport', label: 'Reference export', type: 'text', required: true },

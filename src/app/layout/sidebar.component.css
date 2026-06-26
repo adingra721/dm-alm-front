@@ -4,7 +4,7 @@
   height: 100vh;
   overflow: auto;
   border-right: 1px solid rgba(255, 255, 255, .18);
-  background: linear-gradient(180deg, rgba(18, 55, 118, .92), rgba(28, 68, 135, .86));
+  background: linear-gradient(180deg, rgba(21, 24, 27, .92), rgba(28, 68, 135, .86));
   color: #ffffff;
   padding: 24px 20px;
   transition: padding .22s ease;

@@ -25,7 +25,7 @@
       [class.direct-menu]="menu.items.length"
       routerLinkActive="menu-active"
       #menuActive="routerLinkActive"
-      [attr.open]="firstMenu ? '' : null"
+      [attr.open]="firstMenu || menuActive.isActive ? '' : null"
     >
       <summary>
         <i [class]="menu.icon + ' menu-icon'" aria-hidden="true"></i>

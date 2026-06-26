@@ -1,27 +1,26 @@
 import { NgIf } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-forgot-password',
   standalone: true,
   imports: [NgIf, ReactiveFormsModule, RouterLink],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  templateUrl: './forgot-password.component.html',
+  styleUrl: './forgot-password.component.css'
 })
-export class LoginComponent {
+export class ForgotPasswordComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
 
   loading = false;
   error = '';
+  resetToken = '';
 
   readonly form = this.fb.group({
-    username: ['', Validators.required],
-    password: ['', Validators.required]
+    email: ['', [Validators.required, Validators.email]]
   });
 
   submit(): void {
@@ -29,13 +28,18 @@ export class LoginComponent {
       this.form.markAllAsTouched();
       return;
     }
+
     this.loading = true;
     this.error = '';
-    const { username, password } = this.form.getRawValue();
-    this.auth.login(username ?? '', password ?? '').subscribe({
-      next: (response) => this.router.navigate([response.user.passwordChangeRequired ? '/change-password' : '/dashboard']),
-      error: () => {
-        this.error = 'Identifiant ou mot de passe incorrect.';
+    this.resetToken = '';
+
+    this.auth.requestPasswordReset(this.form.getRawValue().email ?? '').subscribe({
+      next: (token) => {
+        this.resetToken = token;
+        this.loading = false;
+      },
+      error: (error) => {
+        this.error = error?.error?.message ?? 'Impossible de generer le lien de reinitialisation.';
         this.loading = false;
       }
     });

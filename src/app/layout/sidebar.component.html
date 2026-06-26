@@ -8,6 +8,17 @@
   </div>
 
   <nav class="nav">
+    <a
+      class="dashboard-link"
+      routerLink="/dashboard"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      [attr.title]="collapsed ? 'Dashboard' : null"
+    >
+      <i class="fa fa-dashboard menu-icon" aria-hidden="true"></i>
+      <span>Dashboard</span>
+    </a>
+
     <details
       *ngFor="let menu of menus; let firstMenu = first"
       class="settings-menu"
@@ -28,14 +39,20 @@
           #groupActive="routerLinkActive"
           [attr.open]="firstGroup || groupActive.isActive ? '' : null"
         >
-          <summary>{{ group.key }}</summary>
+          <summary>
+            <span class="group-title">
+              <i [class]="group.icon + ' group-icon'" aria-hidden="true"></i>
+              <span>{{ group.key }}</span>
+            </span>
+          </summary>
           <a
             *ngFor="let item of group.value"
             [routerLink]="['/parametrage', item.key]"
             routerLinkActive="active"
             [attr.title]="collapsed ? item.title : null"
           >
-            {{ item.title }}
+            <i class="fa fa-folder item-icon" aria-hidden="true"></i>
+            <span>{{ item.title }}</span>
           </a>
         </details>
       </section>
@@ -47,7 +64,8 @@
           routerLinkActive="active"
           [attr.title]="collapsed ? item.title : null"
         >
-          {{ item.title }}
+          <i class="fa fa-folder item-icon" aria-hidden="true"></i>
+          <span>{{ item.title }}</span>
         </a>
       </section>
     </details>

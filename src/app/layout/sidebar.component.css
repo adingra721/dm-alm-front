@@ -93,6 +93,28 @@
   margin-bottom: 10px;
 }
 
+.dashboard-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, .14);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  padding: 11px 12px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: background .18s ease;
+}
+
+.dashboard-link:hover,
+.dashboard-link.active {
+  background: rgba(48, 113, 166, .72);
+  color: #ffffff;
+}
+
 .settings-menu > summary {
   justify-content: flex-start;
   gap: 6px;
@@ -161,6 +183,22 @@
   padding: 8px 10px;
 }
 
+.group-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.group-icon {
+  display: inline-flex;
+  flex: 0 0 16px;
+  justify-content: center;
+  width: 16px;
+  color: rgba(255, 255, 255, .72);
+  font-size: 13px;
+}
+
 .nav-group.group-active {
   background: rgba(48, 113, 166, .72);
   padding: 10px 0 8px;
@@ -171,12 +209,35 @@
   font-weight: 900;
 }
 
+.nav-group.group-active .group-icon {
+  color: #ffffff;
+}
+
 .nav a {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: rgba(255, 255, 255, .8);
   font-size: 14px;
   margin-left: 8px;
   padding: 8px 10px 8px 16px;
+}
+
+.nav a.dashboard-link {
+  gap: 6px;
+  margin-left: 0;
+  padding: 11px 12px;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.item-icon {
+  display: inline-flex;
+  flex: 0 0 15px;
+  justify-content: center;
+  width: 15px;
+  color: rgba(255, 255, 255, .62);
+  font-size: 12px;
 }
 
 .nav a:hover {
@@ -189,6 +250,16 @@
   background: linear-gradient(90deg, rgba(48, 213, 200, .28), rgba(255, 255, 255, .14));
   color: #ffffff;
   font-weight: 800;
+}
+
+.nav a.dashboard-link.active {
+  border-left: 0;
+  background: rgba(48, 113, 166, .72);
+}
+
+.nav a:hover .item-icon,
+.nav a.active .item-icon {
+  color: #ffffff;
 }
 
 .sidebar.collapsed {
@@ -206,6 +277,7 @@
 }
 
 .sidebar.collapsed .brand-text,
+.sidebar.collapsed .dashboard-link span,
 .sidebar.collapsed .settings-menu > summary span,
 .sidebar.collapsed .settings-menu > summary::after,
 .sidebar.collapsed .nav-group > summary::after {
@@ -217,6 +289,7 @@
 }
 
 .sidebar.collapsed .settings-menu > summary,
+.sidebar.collapsed .dashboard-link,
 .sidebar.collapsed .nav-group > summary {
   justify-content: center;
   margin-left: 0;

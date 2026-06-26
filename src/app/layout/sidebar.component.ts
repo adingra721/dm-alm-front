@@ -1,19 +1,19 @@
 import { Component, Input } from '@angular/core';
-import { KeyValuePipe, NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { EntityConfig, groupedEntityConfigs } from '../core/entity-config';
 
 interface SidebarMenu {
   title: string;
   icon: string;
-  groups: Array<{ key: string; value: EntityConfig[] }>;
+  groups: Array<{ key: string; icon: string; value: EntityConfig[] }>;
   items: EntityConfig[];
 }
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [KeyValuePipe, NgFor, NgIf, RouterLink, RouterLinkActive],
+  imports: [NgFor, NgIf, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })
@@ -21,11 +21,11 @@ export class SidebarComponent {
   @Input() collapsed = false;
 
   private readonly administrationGroups = [
-    'Organisation',
-    'Referentiels ALM',
-    'Parametres financiers',
-    'Parametres assurance',
-    'Securite'
+    { key: 'Organisation', icon: 'fa fa-sitemap' },
+    { key: 'Referentiels ALM', icon: 'fa fa-book' },
+    { key: 'Parametres financiers', icon: 'fa fa-line-chart' },
+    { key: 'Parametres assurance', icon: 'fa fa-shield' },
+    { key: 'Securite', icon: 'fa fa-lock' }
   ];
 
   readonly menus: SidebarMenu[] = [
@@ -50,7 +50,11 @@ export class SidebarComponent {
     {
       title: 'Administration',
       icon: 'fa fa-cog',
-      groups: this.administrationGroups.map((key) => ({ key, value: groupedEntityConfigs[key] ?? [] })),
+      groups: this.administrationGroups.map((group) => ({
+        key: group.key,
+        icon: group.icon,
+        value: groupedEntityConfigs[group.key] ?? []
+      })),
       items: []
     }
   ];

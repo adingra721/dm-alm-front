@@ -1,6 +1,6 @@
 import { NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, forkJoin, of, switchMap, takeUntil } from 'rxjs';
@@ -15,6 +15,8 @@ import { EntityConfig, FieldConfig, entityConfigByKey } from '../../core/entity-
   styleUrls: ['./entity-crud.component.css']
 })
 export class EntityCrudComponent implements OnInit, OnDestroy {
+  @Input() entityKey?: string;
+
   config?: EntityConfig;
   rows: CrudRecord[] = [];
   options: Record<string, CrudRecord[]> = {};
@@ -44,26 +46,35 @@ export class EntityCrudComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    if (this.entityKey) {
+      this.configureEntity(this.entityKey);
+      return;
+    }
+
     this.route.paramMap
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
-        const entityKey = params.get('entityKey') ?? '';
-        const config = entityConfigByKey.get(entityKey);
-        if (!config) {
-          this.error = 'Ressource inconnue.';
-          return;
-        }
-        this.config = config;
-        this.buildForm(config);
-        this.clearFilters();
-        this.closeForm();
-        this.loadData();
+        this.configureEntity(params.get('entityKey') ?? '');
       });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private configureEntity(entityKey: string): void {
+    const config = entityConfigByKey.get(entityKey);
+    if (!config) {
+      this.error = 'Ressource inconnue.';
+      return;
+    }
+
+    this.config = config;
+    this.buildForm(config);
+    this.clearFilters();
+    this.closeForm();
+    this.loadData();
   }
 
   get columns(): string[] {

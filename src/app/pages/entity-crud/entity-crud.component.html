@@ -391,7 +391,7 @@
                 [checked]="isColumnVisible(column)"
                 (change)="toggleColumn(column, $event)"
               >
-              <span>{{ column }}</span>
+              <span>{{ columnLabel(column) }}</span>
             </label>
             <button type="button" class="secondary compact" (click)="showAllColumns()">Tout afficher</button>
           </div>
@@ -415,11 +415,11 @@
                 [indeterminate]="somePagedRowsSelected"
                 [disabled]="isWorkflowEntity"
                 (change)="togglePagedRowsSelection($event)"
-                [attr.title]="isWorkflowEntity ? 'Une seule ligne peut etre cochee pour le workflow' : 'Selectionner la page'"
+                [attr.title]="isWorkflowEntity ? 'Une seule ligne peut etre coché pour le workflow' : 'Selectionner la page'"
                 aria-label="Selectionner la page"
               >
             </th>
-            <th *ngFor="let column of visibleColumns" [ngClass]="columnClass(column)">{{ column }}</th>
+            <th *ngFor="let column of visibleColumns" [ngClass]="columnClass(column)">{{ columnLabel(column) }}</th>
             <th class="action-col">Actions</th>
           </tr>
           <tr class="filter-row">
@@ -429,12 +429,12 @@
                 type="search"
                 [value]="columnFilters[column] || ''"
                 (input)="setColumnFilter(column, $event)"
-                [attr.placeholder]="'Rechercher ' + column"
+                [attr.placeholder]="'Rechercher ' + columnLabel(column)"
               >
             </th>
             <th class="filter-actions">
               <button type="button" class="secondary compact" *ngIf="rows.length" (click)="clearFilters()">
-                <i class="fa fa-eraser button-icon" aria-hidden="true"></i>
+                <i class="fa fa-close button-icon" aria-hidden="true"></i>
                 <span>Vider les filtres</span>
               </button>
             </th>

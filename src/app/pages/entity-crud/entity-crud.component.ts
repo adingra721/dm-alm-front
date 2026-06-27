@@ -361,11 +361,19 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
     if (typeof value === 'boolean') {
       return value ? 'Oui' : 'Non';
     }
+    const relationLabel = this.displayRelationLabel(row, key);
+    if (relationLabel) {
+      return relationLabel;
+    }
     if (value === null || value === undefined || value === '') {
       return '-';
     }
     if (this.isStatusKey(key)) {
       return this.statusLabel(value);
+    }
+    const optionValue = this.displayOptionValue(key, value);
+    if (optionValue) {
+      return optionValue;
     }
     if (this.isDateKey(key)) {
       return this.formatDateValue(value);
@@ -421,6 +429,23 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
 
   columnClass(column: string): string {
     return this.isAmountKey(column) ? 'amount-cell' : '';
+  }
+
+  columnLabel(column: string): string {
+    const directField = this.config?.fields.find((field) => field.key === column);
+    if (directField) {
+      return directField.label;
+    }
+
+    if (column.endsWith('Libelle')) {
+      const relationFieldKey = `${column.slice(0, -'Libelle'.length)}Id`;
+      const relationField = this.config?.fields.find((field) => field.key === relationFieldKey);
+      if (relationField) {
+        return relationField.label;
+      }
+    }
+
+    return column;
   }
 
   workflowSteps(): WorkflowStep[] {
@@ -490,6 +515,30 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
   optionLabel(field: FieldConfig, option: CrudRecord): string {
     const labelKey = field.optionLabelKey ?? 'libelle';
     return String(option[labelKey] ?? option['code'] ?? option['id'] ?? '');
+  }
+
+  private displayOptionValue(key: string, value: string | number | boolean): string {
+    const field = this.config?.fields.find((item) => item.key === key);
+    if (!field?.optionEntityKey) {
+      return '';
+    }
+
+    const option = this.options[field.optionEntityKey]?.find((item) => String(item['id']) === String(value));
+    return option ? this.optionLabel(field, option) : '';
+  }
+
+  private displayRelationLabel(row: CrudRecord, key: string): string {
+    if (!key.endsWith('Libelle')) {
+      return '';
+    }
+
+    const relationFieldKey = `${key.slice(0, -'Libelle'.length)}Id`;
+    const relationId = row[relationFieldKey];
+    if (relationId === null || relationId === undefined || relationId === '') {
+      return '';
+    }
+
+    return this.displayOptionValue(relationFieldKey, relationId);
   }
 
   isColumnVisible(column: string): boolean {

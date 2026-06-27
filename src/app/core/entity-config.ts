@@ -106,7 +106,17 @@ export const entityConfigs: EntityConfig[] = [
       { key: 'actif', label: 'Actif', type: 'checkbox' }
     ]
   },
-  { key: 'financialAssetTypes', title: 'Types actifs financiers', group: 'Referentiels ALM', endpoint: '/referentiels-alm/types-actifs-financiers', displayColumns: referenceColumns, fields: referenceFields },
+  {
+    key: 'financialAssetTypes',
+    title: 'Types actifs financiers',
+    group: 'Referentiels ALM',
+    endpoint: '/referentiels-alm/types-actifs-financiers',
+    displayColumns: ['code', 'libelle', 'categorieActifLibelle', 'description', 'actif'],
+    fields: [
+      ...referenceFields,
+      { key: 'categorieActifId', label: 'Categorie actif', type: 'select', optionEntityKey: 'assetCategories' }
+    ]
+  },
   { key: 'assetCategories', title: 'Categories actifs', group: 'Referentiels ALM', endpoint: '/referentiels-alm/categories-actifs', displayColumns: referenceColumns, fields: referenceFields },
   { key: 'liabilityTypes', title: 'Types passifs', group: 'Referentiels ALM', endpoint: '/referentiels-alm/types-passifs', displayColumns: referenceColumns, fields: referenceFields },
   { key: 'portfolioTypes', title: 'Types portefeuilles', group: 'Referentiels ALM', endpoint: '/referentiels-alm/types-portefeuilles', displayColumns: referenceColumns, fields: referenceFields },
@@ -130,7 +140,7 @@ export const entityConfigs: EntityConfig[] = [
     title: 'Utilisateurs',
     group: 'Securite',
     endpoint: '/securite/utilisateurs',
-    displayColumns: ['username', 'email', 'nomComplet', 'profilId', 'actif'],
+    displayColumns: ['username', 'email', 'nomComplet', 'filialeLibelle', 'profilLibelle', 'actif'],
     fields: [
       { key: 'username', label: 'Identifiant', type: 'text', required: true },
       { key: 'email', label: 'Email', type: 'email', required: true },
@@ -140,6 +150,7 @@ export const entityConfigs: EntityConfig[] = [
       { key: 'failedLoginAttempts', label: 'Echecs connexion', type: 'text' },
       { key: 'lockedUntil', label: 'Verrouille jusqu au', type: 'text' },
       { key: 'lastLoginAt', label: 'Derniere connexion', type: 'text' },
+      { key: 'filialeId', label: 'Filiale', type: 'select', optionEntityKey: 'subsidiaries' },
       { key: 'profilId', label: 'Profil', type: 'select', optionEntityKey: 'profiles' },
       { key: 'actif', label: 'Actif', type: 'checkbox' }
     ]

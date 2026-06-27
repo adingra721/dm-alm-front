@@ -105,6 +105,7 @@
           *ngFor="let field of visibleFormFields"
           [class.checkbox]="field.type === 'checkbox'"
           [class.textarea-field]="field.type === 'textarea'"
+          [class.readonly-field]="field.readonly"
         >
           <span class="field-label">
             {{ field.label }}<strong *ngIf="field.required">*</strong>
@@ -127,12 +128,24 @@
               *ngSwitchCase="'email'"
               type="email"
               [formControlName]="field.key"
+              [readonly]="field.readonly"
               [attr.placeholder]="'Saisir ' + field.label.toLowerCase() + '...'"
             >
             <input
               *ngSwitchCase="'text'"
               type="text"
               [formControlName]="field.key"
+              [readonly]="field.readonly"
+              [attr.placeholder]="'Saisir ' + field.label.toLowerCase() + '...'"
+            >
+            <input
+              *ngSwitchCase="'number'"
+              type="number"
+              step="0.01"
+              min="0"
+              inputmode="decimal"
+              [formControlName]="field.key"
+              [readonly]="field.readonly"
               [attr.placeholder]="'Saisir ' + field.label.toLowerCase() + '...'"
             >
           </ng-container>
@@ -316,6 +329,20 @@
             <small>{{ step.description }}</small>
           </div>
         </div>
+
+        <section class="workflow-auto-info" *ngIf="config.key === 'assetAcquisitions'">
+          <div class="workflow-auto-heading">
+            <span>Informations automatiques</span>
+            <p>Ces donnees sont recuperees et enregistrees a partir de l'utilisateur connecte et des actions du workflow.</p>
+          </div>
+
+          <div class="workflow-auto-grid">
+            <div class="workflow-auto-item" *ngFor="let item of acquisitionWorkflowDetails()">
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          </div>
+        </section>
 
         <div class="workflow-comment" *ngIf="form.get('motifRejet')?.value">
           <strong>Motif de rejet</strong>

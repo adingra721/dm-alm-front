@@ -1,10 +1,11 @@
-export type FieldType = 'text' | 'textarea' | 'checkbox' | 'email' | 'select';
+export type FieldType = 'text' | 'textarea' | 'checkbox' | 'email' | 'select' | 'number';
 
 export interface FieldConfig {
   key: string;
   label: string;
   type: FieldType;
   required?: boolean;
+  readonly?: boolean;
   maxLength?: number;
   optionEntityKey?: string;
   optionLabelKey?: string;
@@ -232,14 +233,13 @@ export const entityConfigs: EntityConfig[] = [
 ];
 
 const acquisitionFields: FieldConfig[] = [
-  { key: 'code', label: 'Code dossier', type: 'text', required: true },
+  { key: 'code', label: 'Code dossier', type: 'text', required: true, readonly: true },
   { key: 'libelle', label: 'Libelle', type: 'text', required: true },
-  { key: 'compagnieId', label: 'Compagnie', type: 'select', optionEntityKey: 'companies', optionLabelKey: 'raisonSociale' },
-  { key: 'filialeId', label: 'Filiale', type: 'select', optionEntityKey: 'subsidiaries' },
+  { key: 'filialeId', label: 'Filiale', type: 'select', required: true, optionEntityKey: 'subsidiaries' },
   { key: 'typeActifId', label: 'Type actif', type: 'select', optionEntityKey: 'financialAssetTypes' },
   { key: 'categorieActifId', label: 'Categorie actif', type: 'select', optionEntityKey: 'assetCategories' },
   { key: 'deviseId', label: 'Devise', type: 'select', optionEntityKey: 'currencies' },
-  { key: 'montantNominal', label: 'Montant nominal', type: 'text' },
+  { key: 'montantNominal', label: 'Montant nominal', type: 'number' },
   { key: 'dateSoumission', label: 'Date soumission', type: 'text' },
   { key: 'dateAutorisation', label: 'Date autorisation', type: 'text' },
   { key: 'dateValidation', label: 'Date validation', type: 'text' },
@@ -250,12 +250,27 @@ const acquisitionFields: FieldConfig[] = [
   { key: 'motifRejet', label: 'Motif rejet', type: 'textarea' }
 ];
 
+const acquisitionWorkflowFieldKeys = [
+  'filialeId',
+  'dateSoumission',
+  'dateAutorisation',
+  'dateValidation',
+  'statut',
+  'gestionnaire',
+  'daf',
+  'dg',
+  'motifRejet'
+];
+
+const acquisitionGeneralFieldKeys = acquisitionFields
+  .map((field) => field.key)
+  .filter((key) => !acquisitionWorkflowFieldKeys.includes(key));
+
 const financialAssetFields: FieldConfig[] = [
   { key: 'code', label: 'Code actif', type: 'text', required: true },
   { key: 'libelle', label: 'Libelle', type: 'text', required: true },
   { key: 'acquisitionId', label: 'Dossier acquisition', type: 'select', optionEntityKey: 'assetAcquisitions' },
-  { key: 'compagnieId', label: 'Compagnie', type: 'select', optionEntityKey: 'companies', optionLabelKey: 'raisonSociale' },
-  { key: 'filialeId', label: 'Filiale', type: 'select', optionEntityKey: 'subsidiaries' },
+  { key: 'filialeId', label: 'Filiale', type: 'select', required: true, optionEntityKey: 'subsidiaries' },
   { key: 'typeActifId', label: 'Type actif', type: 'select', optionEntityKey: 'financialAssetTypes' },
   { key: 'categorieActifId', label: 'Categorie actif', type: 'select', optionEntityKey: 'assetCategories' },
   { key: 'paysEmetteurId', label: 'Pays emetteur', type: 'select', optionEntityKey: 'countries' },
@@ -278,13 +293,13 @@ entityConfigs.push(
     title: 'Acquisition d\'actif',
     group: 'Investissements',
     endpoint: '/investissements/acquisitions',
-    displayColumns: ['code', 'libelle', 'compagnieId', 'filialeId', 'montantNominal', 'statut'],
+    displayColumns: ['code', 'libelle', 'filialeId', 'montantNominal', 'statut'],
     fields: acquisitionFields,
     formTabs: [
       {
         key: 'general',
         label: 'Information generale',
-        fieldKeys: acquisitionFields.map((field) => field.key)
+        fieldKeys: acquisitionGeneralFieldKeys
       },
       {
         key: 'documents',

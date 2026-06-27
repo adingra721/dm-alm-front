@@ -469,6 +469,13 @@ h2 {
   margin-top: 20px;
 }
 
+.readonly-field input {
+  background: #eef2f7;
+  border-color: #d6dee9;
+  color: #667085;
+  cursor: not-allowed;
+}
+
 .tab-empty {
   border: 1px dashed #d8deea;
   background: #f8fafc;
@@ -610,6 +617,61 @@ h2 {
   font-size: 12px;
   font-weight: 600;
   line-height: 1.35;
+}
+
+.workflow-auto-info {
+  display: grid;
+  gap: 16px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  padding: 16px;
+}
+
+.workflow-auto-heading span {
+  color: #1fc5ad;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.workflow-auto-heading p {
+  margin: 6px 0 0;
+  color: #64728f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.workflow-auto-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.workflow-auto-item {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #e7ecf3;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.workflow-auto-item span {
+  color: #64728f;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.workflow-auto-item strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .workflow-comment {

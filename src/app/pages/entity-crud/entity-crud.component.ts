@@ -5,6 +5,7 @@ import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup,
 import { ActivatedRoute } from '@angular/router';
 import { Subject, forkJoin, of, switchMap, takeUntil } from 'rxjs';
 import { ApiService, CrudRecord } from '../../core/api.service';
+import { AuthService } from '../../core/auth.service';
 import { EntityConfig, FieldConfig, FormTabConfig, entityConfigByKey } from '../../core/entity-config';
 
 interface ActivityRecord {
@@ -170,6 +171,7 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly api: ApiService,
+    private readonly auth: AuthService,
     private readonly fb: UntypedFormBuilder,
     private readonly cdr: ChangeDetectorRef
   ) {
@@ -466,6 +468,20 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
     ];
   }
 
+  acquisitionWorkflowDetails(): Array<{ label: string; value: string }> {
+    const row = this.form.getRawValue() as CrudRecord;
+    return [
+      { label: 'Date soumission', value: this.displayValue(row, 'dateSoumission') },
+      { label: 'Gestionnaire', value: this.displayValue(row, 'gestionnaire') },
+      { label: 'Date autorisation', value: this.displayValue(row, 'dateAutorisation') },
+      { label: 'DAF', value: this.displayValue(row, 'daf') },
+      { label: 'Date validation', value: this.displayValue(row, 'dateValidation') },
+      { label: 'DG', value: this.displayValue(row, 'dg') },
+      { label: 'Statut', value: this.statusLabel(row['statut']) },
+      { label: 'Motif rejet', value: this.displayValue(row, 'motifRejet') }
+    ];
+  }
+
   isWorkflowStepDone(status: string): boolean {
     const selectedStatus = this.normalizeStatusValue(this.form.get('statut')?.value);
     const steps = this.workflowSteps().map((step) => step.status);
@@ -674,6 +690,7 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
     this.error = '';
     this.form.enable();
     this.resetForm();
+    this.prefillConnectedUserFields();
     this.openFirstFormTab();
     this.showForm = true;
   }
@@ -717,6 +734,14 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
   save(): void {
     if (this.formMode === 'view') {
       return;
+    }
+
+    if (this.config?.key === 'assetAcquisitions') {
+      this.prefillConnectedUserFields();
+      if (!this.auth.currentUser?.filialeId) {
+        this.error = 'Votre utilisateur connecte n est rattache a aucune filiale.';
+        return;
+      }
     }
 
     if (!this.config || this.form.invalid) {
@@ -775,7 +800,7 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
 
     this.api.workflowAction(this.config, id, action.key, {
       commentaire,
-      utilisateur: 'Utilisateur courant'
+      utilisateur: this.currentWorkflowUser()
     } as CrudRecord).subscribe({
       next: (updated) => {
         this.success = `Workflow mis a jour : ${this.statusLabel(updated['statut'])}.`;
@@ -792,6 +817,11 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private currentWorkflowUser(): string {
+    const user = this.auth.currentUser;
+    return user?.nomComplet || user?.username || 'Utilisateur courant';
   }
 
   delete(row: CrudRecord): void {
@@ -953,6 +983,9 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
     this.config?.fields
       .filter((field) => field.type === 'checkbox')
       .forEach((field) => this.form.get(field.key)?.setValue(true));
+    if (this.config?.key === 'assetAcquisitions') {
+      this.form.get('code')?.setValue(this.acquisitionCodePreview());
+    }
   }
 
   private closeForm(): void {
@@ -968,7 +1001,7 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private normalizePayload(value: CrudRecord): CrudRecord {
-    return Object.fromEntries(
+    const payload = Object.fromEntries(
       Object.entries(value).map(([key, item]) => {
         if (item === '') {
           return [key, null];
@@ -976,9 +1009,47 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
         if (key.endsWith('Id') && item !== null && item !== undefined) {
           return [key, Number(item)];
         }
+        if (this.isNumberField(key) && item !== null && item !== undefined) {
+          return [key, Number(item)];
+        }
         return [key, item];
       })
     );
+
+    if (this.config?.key === 'assetAcquisitions') {
+      payload['filialeId'] = this.auth.currentUser?.filialeId ?? payload['filialeId'] ?? null;
+      ['dateSoumission', 'dateAutorisation', 'dateValidation', 'statut', 'gestionnaire', 'daf', 'dg', 'motifRejet']
+        .forEach((key) => delete payload[key]);
+      if (this.formMode === 'create') {
+        payload['code'] = this.form.get('code')?.value || this.acquisitionCodePreview();
+      }
+    }
+
+    return payload;
+  }
+
+  private prefillConnectedUserFields(): void {
+    if (this.config?.key !== 'assetAcquisitions') {
+      return;
+    }
+    this.form.get('filialeId')?.setValue(this.auth.currentUser?.filialeId ?? null);
+  }
+
+  private acquisitionCodePreview(): string {
+    const year = new Date().getFullYear();
+    const prefix = `ACQ-${year}-`;
+    const nextOrder = this.rows
+      .map((row) => String(row['code'] ?? ''))
+      .filter((code) => code.startsWith(prefix))
+      .map((code) => Number(code.slice(prefix.length)))
+      .filter((order) => Number.isFinite(order))
+      .reduce((max, order) => Math.max(max, order), 0) + 1;
+
+    return `${prefix}${String(nextOrder).padStart(4, '0')}`;
+  }
+
+  private isNumberField(key: string): boolean {
+    return this.config?.fields.some((field) => field.key === key && field.type === 'number') ?? false;
   }
 
   normalizeStatusValue(status: unknown): string {
@@ -1058,7 +1129,11 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
         return;
       }
 
-      this.error = error.error?.message ?? `Erreur API (${error.status}) : ${error.statusText || 'requete impossible'}.`;
+      const validationErrors = error.error?.validationErrors as Record<string, string> | undefined;
+      const validationMessage = validationErrors && Object.keys(validationErrors).length
+        ? ` : ${Object.entries(validationErrors).map(([field, message]) => `${field} ${message}`).join(', ')}`
+        : '';
+      this.error = `${error.error?.message ?? `Erreur API (${error.status}) : ${error.statusText || 'requete impossible'}.`}${validationMessage}`;
       this.cdr.detectChanges();
       return;
     }

@@ -10,6 +10,8 @@ export interface AuthUser {
   email: string;
   nomComplet: string;
   profilId?: number;
+  filialeId?: number;
+  filialeLibelle?: string;
   actif: boolean;
   passwordChangeRequired?: boolean;
 }

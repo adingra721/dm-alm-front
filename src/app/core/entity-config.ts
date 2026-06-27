@@ -281,6 +281,11 @@ entityConfigs.push(
         description: 'Les documents rattaches a cette acquisition seront geres ici.'
       },
       {
+        key: 'workflow',
+        label: 'Workflow',
+        description: 'Circuit de soumission, autorisation, validation et rejet.'
+      },
+      {
         key: 'history',
         label: 'Historique',
         description: 'Historique des actions realisees sur cette acquisition.'
@@ -304,6 +309,11 @@ entityConfigs.push(
         key: 'documents',
         label: 'Document',
         description: 'Les documents rattaches a cet actif seront geres ici.'
+      },
+      {
+        key: 'workflow',
+        label: 'Workflow',
+        description: 'Circuit de controle, validation, activation et rejet.'
       },
       {
         key: 'amortissement',

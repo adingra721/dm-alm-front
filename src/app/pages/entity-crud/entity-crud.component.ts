@@ -31,6 +31,20 @@ interface ActivityGroup {
   items: ActivityRecord[];
 }
 
+interface WorkflowAction {
+  key: string;
+  label: string;
+  icon: string;
+  tone: 'primary' | 'success' | 'warning' | 'validation' | 'danger' | 'neutral';
+  requiresComment?: boolean;
+}
+
+interface WorkflowStep {
+  status: string;
+  label: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-entity-crud',
   standalone: true,
@@ -268,8 +282,36 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
     return this.selectedRowIds.size;
   }
 
+  get selectedWorkflowRow(): CrudRecord | undefined {
+    if (this.selectedRowIds.size !== 1) {
+      return undefined;
+    }
+    const selectedId = Array.from(this.selectedRowIds)[0];
+    return this.rows.find((row) => this.rowId(row) === selectedId);
+  }
+
   get formTabs(): FormTabConfig[] {
-    return this.config?.formTabs ?? [];
+    const tabs = [...(this.config?.formTabs ?? [])];
+    if (!this.isWorkflowEntity || tabs.some((tab) => tab.key === 'workflow')) {
+      return tabs;
+    }
+
+    const historyIndex = tabs.findIndex((tab) => tab.key === 'history');
+    const workflowTab: FormTabConfig = {
+      key: 'workflow',
+      label: 'Workflow',
+      description: this.config?.key === 'assetAcquisitions'
+        ? 'Circuit de soumission, autorisation, validation et rejet.'
+        : 'Circuit de controle, validation, activation et rejet.'
+    };
+
+    if (historyIndex >= 0) {
+      tabs.splice(historyIndex, 0, workflowTab);
+    } else {
+      tabs.push(workflowTab);
+    }
+
+    return tabs;
   }
 
   get hasFormTabs(): boolean {
@@ -278,6 +320,10 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
 
   get isRoleForm(): boolean {
     return this.config?.key === 'roles';
+  }
+
+  get isWorkflowEntity(): boolean {
+    return this.config?.key === 'assetAcquisitions' || this.config?.key === 'financialAssets';
   }
 
   get selectedRolePermissionCount(): number {
@@ -315,7 +361,130 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
     if (typeof value === 'boolean') {
       return value ? 'Oui' : 'Non';
     }
-    return value === null || value === undefined || value === '' ? '-' : String(value);
+    if (value === null || value === undefined || value === '') {
+      return '-';
+    }
+    if (this.isStatusKey(key)) {
+      return this.statusLabel(value);
+    }
+    if (this.isDateKey(key)) {
+      return this.formatDateValue(value);
+    }
+    if (this.isAmountKey(key)) {
+      return this.formatNumberValue(value);
+    }
+    return String(value);
+  }
+
+  statusLabel(status: unknown): string {
+    const normalized = this.normalizeStatusValue(status);
+    if (this.config?.key === 'assetAcquisitions') {
+      const acquisitionLabels: Record<string, string> = {
+        BROUILLON: 'BROUILLON',
+        SOUMIS: 'EN AUTORISATION',
+        AUTORISE: 'EN VALIDATION',
+        VALIDE: 'ACTIF',
+        REJETE: 'REJETE'
+      };
+      return acquisitionLabels[normalized] ?? this.formatStatusValue(normalized);
+    }
+
+    const labels: Record<string, string> = {
+      BROUILLON: 'BROUILLON',
+      SOUMIS: 'SOUMIS',
+      AUTORISE: 'AUTORISE',
+      EN_CONTROLE: 'EN CONTROLE',
+      EN_VALIDATION: 'EN VALIDATION',
+      VALIDE: 'VALIDE',
+      ACTIF: 'ACTIF',
+      REJETE: 'REJETE'
+    };
+    return labels[normalized] ?? this.formatStatusValue(normalized);
+  }
+
+  statusTone(status: unknown): string {
+    const normalized = this.normalizeStatusValue(status);
+    if (normalized === 'VALIDE' || normalized === 'ACTIF') {
+      return 'success';
+    }
+    if (normalized === 'REJETE') {
+      return 'danger';
+    }
+    if (normalized === 'EN_VALIDATION' || (this.config?.key === 'assetAcquisitions' && normalized === 'AUTORISE')) {
+      return 'validation';
+    }
+    if (normalized === 'SOUMIS' || normalized === 'AUTORISE' || normalized === 'EN_CONTROLE' || normalized === 'EN_VALIDATION') {
+      return 'warning';
+    }
+    return 'neutral';
+  }
+
+  columnClass(column: string): string {
+    return this.isAmountKey(column) ? 'amount-cell' : '';
+  }
+
+  workflowSteps(): WorkflowStep[] {
+    if (this.config?.key === 'assetAcquisitions') {
+      return [
+        { status: 'BROUILLON', label: 'BROUILLON', description: 'Dossier prepare par le gestionnaire.' },
+        { status: 'SOUMIS', label: 'EN AUTORISATION', description: 'Dossier envoye pour autorisation.' },
+        { status: 'AUTORISE', label: 'EN VALIDATION', description: 'Autorisation obtenue, dossier en validation.' },
+        { status: 'VALIDE', label: 'ACTIF', description: 'Dossier valide et actif.' }
+      ];
+    }
+
+    return [
+      { status: 'BROUILLON', label: 'BROUILLON', description: 'Actif en preparation.' },
+      { status: 'EN_CONTROLE', label: 'EN CONTROLE', description: 'Controle ALM et conformite.' },
+      { status: 'VALIDE', label: 'VALIDE', description: 'Actif valide pour activation.' },
+      { status: 'ACTIF', label: 'ACTIF', description: 'Actif integre au portefeuille.' }
+    ];
+  }
+
+  isWorkflowStepDone(status: string): boolean {
+    const selectedStatus = this.normalizeStatusValue(this.form.get('statut')?.value);
+    const steps = this.workflowSteps().map((step) => step.status);
+    return steps.indexOf(status) <= steps.indexOf(selectedStatus) && steps.indexOf(selectedStatus) >= 0;
+  }
+
+  workflowActions(row?: CrudRecord): WorkflowAction[] {
+    if (!this.config || !this.isWorkflowEntity) {
+      return [];
+    }
+
+    const status = this.normalizeStatusValue(row?.['statut'] ?? this.form.get('statut')?.value);
+    if (this.config.key === 'assetAcquisitions') {
+      const actions: Record<string, WorkflowAction[]> = {
+        BROUILLON: [{ key: 'submit', label: 'Soumettre', icon: 'fa-paper-plane', tone: 'primary' }],
+        REJETE: [{ key: 'submit', label: 'Resoumettre', icon: 'fa-paper-plane', tone: 'primary' }],
+        SOUMIS: [
+          { key: 'authorize', label: 'Autoriser', icon: 'fa-check-circle', tone: 'success' },
+          { key: 'reject', label: 'Rejeter', icon: 'fa-times-circle', tone: 'danger', requiresComment: true }
+        ],
+        AUTORISE: [
+          { key: 'validate', label: 'Valider', icon: 'fa-check', tone: 'success' },
+          { key: 'reject', label: 'Rejeter', icon: 'fa-times-circle', tone: 'danger', requiresComment: true }
+        ],
+        VALIDE: [{ key: 'reactivate', label: 'Reouvrir', icon: 'fa-undo', tone: 'warning' }]
+      };
+      return actions[status] ?? actions['BROUILLON'];
+    }
+
+    const actions: Record<string, WorkflowAction[]> = {
+      BROUILLON: [{ key: 'submit', label: 'Controle', icon: 'fa-search', tone: 'primary' }],
+      REJETE: [{ key: 'submit', label: 'Reprendre', icon: 'fa-undo', tone: 'primary' }],
+      EN_CONTROLE: [
+        { key: 'validate', label: 'Valider', icon: 'fa-check-circle', tone: 'success' },
+        { key: 'reject', label: 'Rejeter', icon: 'fa-times-circle', tone: 'danger', requiresComment: true }
+      ],
+      EN_VALIDATION: [
+        { key: 'validate', label: 'Valider', icon: 'fa-check-circle', tone: 'success' },
+        { key: 'reject', label: 'Rejeter', icon: 'fa-times-circle', tone: 'danger', requiresComment: true }
+      ],
+      VALIDE: [{ key: 'activate', label: 'Activer', icon: 'fa-play', tone: 'success' }],
+      ACTIF: [{ key: 'reactivate', label: 'Reouvrir', icon: 'fa-undo', tone: 'warning' }]
+    };
+    return actions[status] ?? actions['BROUILLON'];
   }
 
   optionLabel(field: FieldConfig, option: CrudRecord): string {
@@ -358,9 +527,16 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     if (checkbox.checked) {
+      if (this.isWorkflowEntity) {
+        this.selectedRowIds.clear();
+        this.openWorkflowForm(row);
+      }
       this.selectedRowIds.add(id);
     } else {
       this.selectedRowIds.delete(id);
+      if (this.isWorkflowEntity && Number(this.selected?.['id']) === id) {
+        this.closeForm();
+      }
     }
   }
 
@@ -374,7 +550,24 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
     this.form.disable();
   }
 
+  private openWorkflowForm(row: CrudRecord): void {
+    this.selected = row;
+    this.formMode = 'view';
+    this.showForm = true;
+    this.activeFormTabKey = 'workflow';
+    this.success = '';
+    this.error = '';
+    this.form.patchValue(row);
+    this.form.disable();
+    this.cdr.detectChanges();
+  }
+
   togglePagedRowsSelection(event: Event): void {
+    if (this.isWorkflowEntity) {
+      (event.target as HTMLInputElement).checked = false;
+      return;
+    }
+
     const checkbox = event.target as HTMLInputElement;
     this.pagedRows.forEach((row) => {
       const id = this.rowId(row);
@@ -496,6 +689,51 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
       next: () => {
         this.success = this.selected ? 'Element modifie avec succes.' : 'Element cree avec succes.';
         this.closeForm();
+        this.cdr.detectChanges();
+        this.loadData();
+      },
+      error: (error) => this.handleError(error),
+      complete: () => {
+        this.saving = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  applyWorkflowAction(row: CrudRecord | undefined, action: WorkflowAction): void {
+    if (!this.config || !this.isWorkflowEntity) {
+      return;
+    }
+
+    const target = row ?? this.selected;
+    const id = Number(target?.['id']);
+    if (!Number.isFinite(id)) {
+      this.error = 'Enregistrez d abord la fiche avant de lancer le workflow.';
+      return;
+    }
+
+    let commentaire = '';
+    if (action.requiresComment) {
+      commentaire = prompt('Motif ou commentaire de rejet')?.trim() ?? '';
+      if (!commentaire) {
+        return;
+      }
+    }
+
+    this.saving = true;
+    this.error = '';
+    this.success = '';
+
+    this.api.workflowAction(this.config, id, action.key, {
+      commentaire,
+      utilisateur: 'Utilisateur courant'
+    } as CrudRecord).subscribe({
+      next: (updated) => {
+        this.success = `Workflow mis a jour : ${this.statusLabel(updated['statut'])}.`;
+        if (!row) {
+          this.selected = updated;
+          this.form.patchValue(updated);
+        }
         this.cdr.detectChanges();
         this.loadData();
       },
@@ -677,7 +915,7 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private openFirstFormTab(): void {
-    this.activeFormTabKey = this.config?.formTabs?.[0]?.key ?? '';
+    this.activeFormTabKey = this.formTabs[0]?.key ?? '';
   }
 
   private normalizePayload(value: CrudRecord): CrudRecord {
@@ -692,6 +930,65 @@ export class EntityCrudComponent implements OnChanges, OnInit, OnDestroy {
         return [key, item];
       })
     );
+  }
+
+  normalizeStatusValue(status: unknown): string {
+    return String(status ?? 'BROUILLON').trim().toUpperCase();
+  }
+
+  private isAmountKey(key: string): boolean {
+    const normalized = key.toLowerCase();
+    return !normalized.endsWith('id') && (
+      normalized.includes('montant') ||
+      normalized.includes('valeur') ||
+      normalized.includes('capital') ||
+      normalized.includes('interet') ||
+      normalized.includes('amortissement') ||
+      normalized.includes('prix') ||
+      normalized.includes('solde')
+    );
+  }
+
+  private isDateKey(key: string): boolean {
+    return key.toLowerCase().includes('date') || key.toLowerCase().endsWith('at') || key.toLowerCase().endsWith('until');
+  }
+
+  private isStatusKey(key: string): boolean {
+    const normalized = key.toLowerCase();
+    return normalized === 'statut' || normalized === 'status';
+  }
+
+  private formatStatusValue(status: string): string {
+    return status.replace(/_/g, ' ').toUpperCase();
+  }
+
+  private formatNumberValue(value: string | number | boolean): string {
+    const numberValue = typeof value === 'number' ? value : Number(String(value).replace(',', '.'));
+    if (!Number.isFinite(numberValue)) {
+      return String(value);
+    }
+    return new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: Number.isInteger(numberValue) ? 0 : 2,
+      maximumFractionDigits: 4
+    }).format(numberValue);
+  }
+
+  private formatDateValue(value: string | number | boolean): string {
+    if (typeof value === 'boolean') {
+      return value ? 'Oui' : 'Non';
+    }
+
+    const rawValue = String(value);
+    const dateValue = new Date(rawValue);
+    if (Number.isNaN(dateValue.getTime())) {
+      return rawValue;
+    }
+
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(dateValue);
   }
 
   private handleError(error: unknown): void {

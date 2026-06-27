@@ -2,18 +2,6 @@
   <div class="notice error" *ngIf="error">{{ error }}</div>
   <div class="notice success" *ngIf="success">{{ success }}</div>
 
-  <section class="toolbar">
-    <div class="toolbar-left">
-      <select>
-        <option>Choisir une action</option>
-      </select>
-      <button type="button" class="icon-button" aria-label="Appliquer l'action">›</button>
-    </div>
-    <div class="toolbar-right">
-      <span class="search-label">Recherche par colonne</span>
-    </div>
-  </section>
-
   <section class="editor" *ngIf="showForm">
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="role-form" *ngIf="isRoleForm">
@@ -305,7 +293,38 @@
         </div>
       </div>
 
-      <div class="tab-empty" *ngIf="!isRoleForm && hasFormTabs && visibleFormFields.length === 0 && activeFormTabKey !== 'documents' && activeFormTabKey !== 'history'">
+      <div class="workflow-panel" *ngIf="!isRoleForm && isWorkflowEntity && activeFormTabKey === 'workflow' && visibleFormFields.length === 0">
+        <header class="workflow-header">
+          <div>
+            <span>Workflow de validation</span>
+            <h3>{{ selected ? displayValue(selected, 'libelle') : 'Enregistrez la fiche pour demarrer le workflow' }}</h3>
+          </div>
+          <span class="status-badge" [ngClass]="statusTone(form.get('statut')?.value)">
+            {{ statusLabel(form.get('statut')?.value) }}
+          </span>
+        </header>
+
+        <div class="workflow-steps">
+          <div
+            class="workflow-step"
+            *ngFor="let step of workflowSteps()"
+            [class.done]="isWorkflowStepDone(step.status)"
+            [class.current]="normalizeStatusValue(form.get('statut')?.value) === step.status"
+          >
+            <span class="step-marker"><i class="fa fa-check" aria-hidden="true"></i></span>
+            <strong>{{ step.label }}</strong>
+            <small>{{ step.description }}</small>
+          </div>
+        </div>
+
+        <div class="workflow-comment" *ngIf="form.get('motifRejet')?.value">
+          <strong>Motif de rejet</strong>
+          <p>{{ form.get('motifRejet')?.value }}</p>
+        </div>
+
+      </div>
+
+      <div class="tab-empty" *ngIf="!isRoleForm && hasFormTabs && visibleFormFields.length === 0 && activeFormTabKey !== 'documents' && activeFormTabKey !== 'history' && activeFormTabKey !== 'workflow'">
         {{ activeFormTab?.description || 'Aucun champ a afficher pour cet onglet.' }}
       </div>
 
@@ -317,6 +336,37 @@
   </section>
 
   <section class="table-area">
+    <div class="workflow-table-banner" *ngIf="isWorkflowEntity">
+      <div>
+        <span class="workflow-kicker">Workflow actif</span>
+        <strong>{{ config.title }}</strong>
+        <small>
+          Cocher la ligne pour envoyer en autorisation, autoriser ou valider.
+        </small>
+      </div>
+      <div class="workflow-banner-actions" *ngIf="selectedWorkflowRow; else workflowSelectionHelp">
+        <span class="status-badge table-status" [ngClass]="statusTone(selectedWorkflowRow['statut'])">
+          {{ statusLabel(selectedWorkflowRow['statut']) }}
+        </span>
+        <button
+          type="button"
+          class="workflow-action"
+          *ngFor="let action of workflowActions(selectedWorkflowRow)"
+          [ngClass]="action.tone"
+          [disabled]="saving"
+          (click)="applyWorkflowAction(selectedWorkflowRow, action)"
+        >
+          <i class="fa" [ngClass]="action.icon" aria-hidden="true"></i>
+          {{ action.label }}
+        </button>
+      </div>
+      <ng-template #workflowSelectionHelp>
+        <div class="workflow-banner-empty">
+          {{ selectedCount > 1 ? 'Selectionner une seule ligne pour afficher les actions possibles.' : 'Aucune ligne selectionnee.' }}
+        </div>
+      </ng-template>
+    </div>
+
     <div class="table-header">
       <button type="button" class="create-button compact" (click)="create()">
         <span class="button-icon" aria-hidden="true">
@@ -363,11 +413,13 @@
                 class="row-check"
                 [checked]="allPagedRowsSelected"
                 [indeterminate]="somePagedRowsSelected"
+                [disabled]="isWorkflowEntity"
                 (change)="togglePagedRowsSelection($event)"
+                [attr.title]="isWorkflowEntity ? 'Une seule ligne peut etre cochee pour le workflow' : 'Selectionner la page'"
                 aria-label="Selectionner la page"
               >
             </th>
-            <th *ngFor="let column of visibleColumns">{{ column }}</th>
+            <th *ngFor="let column of visibleColumns" [ngClass]="columnClass(column)">{{ column }}</th>
             <th class="action-col">Actions</th>
           </tr>
           <tr class="filter-row">
@@ -399,7 +451,12 @@
                 aria-label="Selectionner la ligne"
               >
             </td>
-            <td *ngFor="let column of visibleColumns">{{ displayValue(row, column) }}</td>
+            <td *ngFor="let column of visibleColumns" [ngClass]="columnClass(column)">
+              <span *ngIf="column === 'statut'; else plainCell" class="status-badge table-status" [ngClass]="statusTone(row[column])">
+                {{ statusLabel(row[column]) }}
+              </span>
+              <ng-template #plainCell>{{ displayValue(row, column) }}</ng-template>
+            </td>
             <td class="action-cell">
               <div class="row-actions">
                 <button type="button" class="view" (click)="view(row)" aria-label="Voir" title="Voir">

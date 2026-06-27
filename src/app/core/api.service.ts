@@ -27,4 +27,8 @@ export class ApiService {
   delete(config: EntityConfig, id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}${config.endpoint}/${id}`);
   }
+
+  workflowAction(config: EntityConfig, id: number, action: string, payload: CrudRecord = {}): Observable<CrudRecord> {
+    return this.http.post<CrudRecord>(`${this.baseUrl}${config.endpoint}/${id}/workflow/${action}`, payload);
+  }
 }
